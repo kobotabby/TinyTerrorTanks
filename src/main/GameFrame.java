@@ -40,6 +40,7 @@ import entity.Tank;
 import entity.Wall;
 import handlers.KeyHandler;
 import handlers.MouseHandler;
+import map.Map;
 import templates.Game;
 
 ////// REPAIR BROKEN LOAD STATES
@@ -53,7 +54,9 @@ public class GameFrame extends Game {
 	final int MAX_SCREEN_COL = 20;  
 	final int SCREEN_WIDTH = TILE_SIZE * MAX_SCREEN_ROW; // 48 * 16 = 768
 	final int SCREEN_HEIGHT = TILE_SIZE * MAX_SCREEN_COL; //48 * 12 = 576
+	
 	private Map board = new Map(MAX_SCREEN_ROW, MAX_SCREEN_COL);	
+//	private Room currentRoom = ;
 	private double enemyMovementInterval; 
 	private double delta;
 	private long lastTime;
@@ -100,7 +103,7 @@ public class GameFrame extends Game {
 		lastTime = System.nanoTime();
 		decisionCount = 0;
 		timer = 0;
-		enemySpeedScale = 10;
+		enemySpeedScale = 1;
 		enemyBulletSpeedScale = 1;
 		enemyFireRateScale = 6;
 		enemyDamageScale = 0.1;
@@ -128,16 +131,17 @@ public class GameFrame extends Game {
 
 		healthLabel = new JLabel("HP: FULL");
 		healthLabel.setForeground(Color.BLACK);
-		healthLabel.setBounds(50, 528, 400, 48);
+		healthLabel.setBounds(50, 910, 400, 48);
 		healthLabel.setFont(new Font("Sans-serif", Font.BOLD, 48));
 		add(healthLabel);
 
 		levelLabel = new JLabel("LEVEL: 01");
 		levelLabel.setForeground(Color.BLACK);
-		levelLabel.setBounds(540, 528, 400, 48);
+		levelLabel.setBounds(540, 910, 400, 48);
 		levelLabel.setFont(new Font("Sans-serif", Font.BOLD, 48));
 		add(levelLabel);
 
+		System.out.println("GENERATING BOARD");
 		generateNewBoard(numEnemies);
 		this.addKeyListener(keyH);
 		this.addMouseListener(mouseH);
@@ -150,7 +154,7 @@ public class GameFrame extends Game {
 		this.addMouseMotionListener(mouseH);
 		this.setFocusable(true);
 		this.setResizable(false);
-//		System.out.println("game started");
+		System.out.println("game started");
 	}
 
 	/** setup() method sets a delay for the act method */
@@ -206,8 +210,15 @@ public class GameFrame extends Game {
 			player.setX(originalX);
 			player.setY(originalY);
 		}
+		
+		// Enemy Spawn Testing 
+		if (keyH.spacePressed) {
+			generateNewEnemies(1);
+		}
+		
+		
 		// Player Shooting
-		if (((mouseH.mousePressed) || (keyH.spacePressed)) && player.shotReady()) {
+		if (((mouseH.mousePressed)) && player.shotReady()) {
 			// find mouse shooting angle			
 			double angle = getAngleTo(player.getCenterX(), player.getCenterY(), mouseH.mouseX, mouseH.mouseY);
 			// create new projectile for the player and add it to the projectile list
@@ -216,6 +227,8 @@ public class GameFrame extends Game {
 			add(bullet);
 			player.shootProjectile(angle);
 		}
+		
+		
 		// Projectile Logic
 		for (int i=0; i< getProjList().size(); i++) {
 			//	System.out.println(projList.size());
@@ -381,10 +394,10 @@ public class GameFrame extends Game {
 		}
 		
 		// enter the next level if all enemies have been killed
-		if (getEnemyList().size() == 0) {
-			clearEntities();
-			generateNewBoard(numEnemies);
-		}
+//		if (getEnemyList().size() == 0) {
+//			clearEntities();
+//			generateNewBoard(numEnemies);
+//		}
 
 		// updates per second style timer for enemy movement
 		currentTime = System.nanoTime();
@@ -533,6 +546,36 @@ public class GameFrame extends Game {
 					add(player);
 				}
 				// enemy=3
+//				if (boardArr[row][col] == 3) {
+//					enemy = new Tank(row*TILE_SIZE+TILE_SIZE/2, col*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
+//					add(enemy);
+//					getEnemyList().add(enemy);
+//				}			
+			}			
+		}
+		levelUp();
+	}
+	
+	public void getBoard(int roomID, int numEnemies) {
+		// have a generate new map with the player's position in mind 
+		int[][] boardArr = board.generateNewMap(numEnemies);
+		wallArr = board.getWallArray();
+
+		for (int row=0; row<=boardArr.length-1; row++){
+			for (int col=0; col<=boardArr[0].length-1; col++){
+				// wall=1
+				if (boardArr[row][col] == 1) {
+					Wall wall = new Wall(row*TILE_SIZE, col*TILE_SIZE, TILE_SIZE, TILE_SIZE);
+					wallList.add(wall);
+					add(wall);
+				}
+				// player=2
+				if (boardArr[row][col] == 2) {
+					player = new Player(row*TILE_SIZE+TILE_SIZE/2, col*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
+					player.setHealth(playerHealth+playerHeal);
+					add(player);
+				}
+				// enemy=3
 				if (boardArr[row][col] == 3) {
 					enemy = new Tank(row*TILE_SIZE+TILE_SIZE/2, col*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
 					add(enemy);
@@ -540,7 +583,6 @@ public class GameFrame extends Game {
 				}			
 			}			
 		}
-		levelUp();
 	}
 	
 	/** 

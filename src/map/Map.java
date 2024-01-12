@@ -4,12 +4,11 @@
  * 1/23/2023
  * Map class that manages generating a board array to be used as a template for the GameFrame class .
  */
-package main;
+package map;
 import java.util.Arrays;
 import java.util.Random;
 
-// create ai tester where you can place walls and see the djisktra work real time
-// ADD LEVEL COUNTDOWN TO DISGUISE LAG
+// ADD LEVEL COUNTDOWN TO prevent LAG
 /* Map class manages generating a board array to be used as a template for the GameFrame class */
 public class Map {
 	// tile assignments values within the board array
@@ -23,9 +22,11 @@ public class Map {
 	private Random r = new Random();
 	// create empty board with constructor
 	private int[][] board;
-	Map(int rows, int cols){
+	public Map(int rows, int cols){
 		this.board = new int[rows][cols];
+		System.out.println("BOARD HAS BEEN MADE");
 	}
+	
 	
 	
 	

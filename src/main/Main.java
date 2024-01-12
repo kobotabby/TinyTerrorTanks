@@ -44,9 +44,12 @@ import javax.swing.Timer;
 /** Main class manages the active JFrame and main menu GUI */
 public class Main {
 	private static boolean firstTime = true;
-	private static GameFrame frame = new GameFrame();
-
+	private static GameFrame frame;
+	
 	public static void main(String[] args) throws IOException {
+		System.out.println("RUNNING");
+		frame = new GameFrame();
+
 		// loop and check game over state every second
 		Timer timer = new Timer(1000, e -> {
 			// print statement to debug if the timer loop is running properly
@@ -79,6 +82,7 @@ public class Main {
 	}
 	/** Method creates new game process */
 	public static void createNewGameFrame() {
+		System.out.println("RUNNING");
 		frame = new GameFrame();
 		// auto center window
 		frame.setLocationRelativeTo(null);
@@ -90,10 +94,12 @@ public class Main {
 	}
 	public static void displayMainMenu() {
 		// main menu GUI options
-				Object[] options = {"Play", "Controls", "Highscores", "Quit"};
+
+		Object[] options = {"Play", "Controls", "Highscores", "Quit"};
 				// loop the main menu screen when the player has not yet started to play the game or exit
 				boolean choiceOpen = true;
 				while (true) {
+					System.out.println("RUNNING");
 					choiceOpen = false;
 					// Code for main menu GUI
 					int choice = JOptionPane.showOptionDialog(frame,

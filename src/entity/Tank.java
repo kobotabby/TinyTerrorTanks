@@ -17,6 +17,8 @@ import javax.swing.JLabel;
 import main.GameFrame;
 import templates.GameObject;
 
+
+/// figure out moving to point in grid
 /** Tank object */
 public class Tank extends GameObject{
 	
