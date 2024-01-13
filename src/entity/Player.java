@@ -16,7 +16,7 @@ import handlers.MouseHandler;
 import main.GameFrame;
 
 public class Player extends Tank  {	
-	public int speed = 4; 
+	public int speed = 6; // speed normally 4
 	private int health; 
 	private int damage = 100; 
 	private int centerX; 

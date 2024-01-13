@@ -1,4 +1,4 @@
-package map;
+ package map;
 
 import java.util.Random;
 
@@ -12,13 +12,18 @@ public class Room {
 	private final int ENEMY_SQUARE = 3;
 	private final int PLAYER_SPAWN_AREA_SQUARE = 4;
 	private final int ENTITY_AREA = 5;
+	private final int ENTRANCE_SQUARE = 6;
+	
+	
 	// create a new random class to use for board generation
 	private Random r = new Random();
+	private int roomID = 0;
 	
 	// create empty board with constructor
-	public Room(int rows, int cols) {
+	public Room(int rows, int cols, int id) {
+		roomID = id;
 		board = new int[rows][cols];
-		board = generateSimpleRectangle();
+		board = generateNewMap(0);
 		System.out.println("BOARD HAS BEEN MADE");
 	}
 
@@ -228,27 +233,44 @@ public class Room {
 	}
 	public void createLeftEntrance(){
 		for (int row=8; row<=board.length-1-8; row++){
-			board[row][0] = BLANK_SQUARE;
+			board[row][0] = ENTRANCE_SQUARE;
+		}
+		for (int row=8; row<=board.length-1-8; row++){
+			board[row][1] = BLANK_SQUARE;
 		}
 	}
 	public void createRightEntrance(){
 		for (int row=8; row<=board.length-1-8; row++){
-			board[row][board[0].length-1] = BLANK_SQUARE;
+			board[row][board[0].length-1] = ENTRANCE_SQUARE;
+		}
+		for (int row=8; row<=board.length-1-8; row++){
+			board[row][board[0].length-2] = BLANK_SQUARE;
 		}
 	}	
 	public void createTopEntrance(){
 		for (int col=8; col<=board[0].length-1-8; col++){
-			board[0][col] = BLANK_SQUARE;
+			board[0][col] = ENTRANCE_SQUARE;
+		}
+		for (int col=8; col<=board[0].length-1-8; col++){
+			board[1][col] = BLANK_SQUARE;
 		}
 	}
 	public void createBottomEntrance(){
 		for (int col=8; col<=board[0].length-1-8; col++){
-			board[board.length-1][col] = BLANK_SQUARE;
+			board[board.length-1][col] = ENTRANCE_SQUARE;
+		}
+		for (int col=8; col<=board[0].length-1-8; col++){
+			board[board.length-2][col] = BLANK_SQUARE;
 		}
 	}
-	public int[][] getRoom(){
+	public int[][] getArray(){
 		return board;
 	}
+
+	public int getRoomID() {
+		return roomID;
+	}
+
 
 
 	

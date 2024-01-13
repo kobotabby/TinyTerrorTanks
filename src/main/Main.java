@@ -102,9 +102,19 @@ public class Main {
 					System.out.println("RUNNING");
 					choiceOpen = false;
 					// Code for main menu GUI
+//					int choice = JOptionPane.showOptionDialog(frame,
+//							"Blast through levels of tanks as they get more numbered, dangerous and quick!",
+//							"Welcome to the TankRunner Menu!",
+//							JOptionPane.DEFAULT_OPTION,
+//							JOptionPane.QUESTION_MESSAGE,
+//							null,
+//							options,
+//							options[2]);
 					int choice = JOptionPane.showOptionDialog(frame,
-							"Blast through levels of tanks as they get more numbered, dangerous and quick!",
-							"Welcome to the TankRunner Menu!",
+							"Currently a demo of a new floor generation with interconnected rooms, press SPACE to spawn in enemies.",
+							//  bugs: cannot reenter game from menu after death and game does not always run when started. 
+							
+							"Welcome to the TankRunner 2 Milestone Menu!",
 							JOptionPane.DEFAULT_OPTION,
 							JOptionPane.QUESTION_MESSAGE,
 							null,

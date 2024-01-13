@@ -1,7 +1,7 @@
 /**
  * @author Ethan Gan
  * Computer Science
- * 1/23/2023
+ * 1/12/2024
  * GameFrame class controls the running TankRunner Game.
  */
 package main;
@@ -40,7 +40,8 @@ import entity.Tank;
 import entity.Wall;
 import handlers.KeyHandler;
 import handlers.MouseHandler;
-import map.Map;
+import map.GameMap;
+import map.Room;
 import templates.Game;
 
 ////// REPAIR BROKEN LOAD STATES
@@ -55,7 +56,7 @@ public class GameFrame extends Game {
 	final int SCREEN_WIDTH = TILE_SIZE * MAX_SCREEN_ROW; // 48 * 16 = 768
 	final int SCREEN_HEIGHT = TILE_SIZE * MAX_SCREEN_COL; //48 * 12 = 576
 	
-	private Map board = new Map(MAX_SCREEN_ROW, MAX_SCREEN_COL);	
+	private GameMap gameMap = new GameMap(MAX_SCREEN_ROW, MAX_SCREEN_COL, 8);	
 //	private Room currentRoom = ;
 	private double enemyMovementInterval; 
 	private double delta;
@@ -137,12 +138,12 @@ public class GameFrame extends Game {
 
 		levelLabel = new JLabel("LEVEL: 01");
 		levelLabel.setForeground(Color.BLACK);
-		levelLabel.setBounds(540, 910, 400, 48);
+		levelLabel.setBounds(700, 910, 400, 48);
 		levelLabel.setFont(new Font("Sans-serif", Font.BOLD, 48));
 		add(levelLabel);
 
 		System.out.println("GENERATING BOARD");
-		generateNewBoard(numEnemies);
+		drawRoomBoard(gameMap.getCurrentRoom());
 		this.addKeyListener(keyH);
 		this.addMouseListener(mouseH);
 
@@ -301,7 +302,7 @@ public class GameFrame extends Game {
 		}
 		// update screen with removed bullets
 		repaint();		
-		// Enemy Logic
+		// Enemy Logic SHOULD BE MOVED TO ENEMY TANK CLASS THAT EXTENDS TANK
 				for (int n=0; n< getEnemyList().size(); n++) {
 					if (getEnemyList().size() != 0) {
 						enemy = getEnemyList().get(n);
@@ -398,6 +399,8 @@ public class GameFrame extends Game {
 //			clearEntities();
 //			generateNewBoard(numEnemies);
 //		}
+		
+		checkRoomChange();
 
 		// updates per second style timer for enemy movement
 		currentTime = System.nanoTime();
@@ -520,47 +523,48 @@ public class GameFrame extends Game {
 			timer = 0;
 		}
 	}
-	/// SHOULD THIS BE IN JFRAME OR OVER HERE //////////////////////
-	/** 
-	 * Method adds objects dictated from the Map object's board array to the JFrame.
-	 * pre: board.length != 0, board[0].length != 0, numEnemies >= 0
-	 * post: items of board array should appear on screen including wall and tank objects
-	 */
-	public void generateNewBoard(int numEnemies) {
-		// have a generate new map with the player's position in mind 
-		int[][] boardArr = board.generateNewMap(numEnemies);
-		wallArr = board.getWallArray();
-
-		for (int row=0; row<=boardArr.length-1; row++){
-			for (int col=0; col<=boardArr[0].length-1; col++){
-				// wall=1
-				if (boardArr[row][col] == 1) {
-					Wall wall = new Wall(row*TILE_SIZE, col*TILE_SIZE, TILE_SIZE, TILE_SIZE);
-					wallList.add(wall);
-					add(wall);
-				}
-				// player=2
-				if (boardArr[row][col] == 2) {
-					player = new Player(row*TILE_SIZE+TILE_SIZE/2, col*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
-					player.setHealth(playerHealth+playerHeal);
-					add(player);
-				}
-				// enemy=3
-//				if (boardArr[row][col] == 3) {
-//					enemy = new Tank(row*TILE_SIZE+TILE_SIZE/2, col*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
-//					add(enemy);
-//					getEnemyList().add(enemy);
-//				}			
-			}			
-		}
-		levelUp();
-	}
 	
-	public void getBoard(int roomID, int numEnemies) {
+//	/** 
+//	 * Method adds objects dictated from the Map object's board array to the JFrame.
+//	 * pre: board.length != 0, board[0].length != 0, numEnemies >= 0
+//	 * post: items of board array should appear on screen including wall and tank objects
+//	 */
+//	public void generateNewBoard(int numEnemies) {
+//		// have a generate new map with the player's position in mind 
+//		int[][] boardArr = board.getCurrentRoom().generateNewMap(numEnemies);
+//		wallArr = board.getWallArray();
+//
+//		for (int row=0; row<=boardArr.length-1; row++){
+//			for (int col=0; col<=boardArr[0].length-1; col++){
+//				// wall=1
+//				if (boardArr[row][col] == 1) {
+//					Wall wall = new Wall(row*TILE_SIZE, col*TILE_SIZE, TILE_SIZE, TILE_SIZE);
+//					wallList.add(wall);
+//					add(wall);
+//				}
+//				// player=2
+//				if (boardArr[row][col] == 2) {
+//					player = new Player(row*TILE_SIZE+TILE_SIZE/2, col*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
+//					player.setHealth(playerHealth+playerHeal);
+//					add(player);
+//				}
+//				// enemy=3
+////				if (boardArr[row][col] == 3) {
+////					enemy = new Tank(row*TILE_SIZE+TILE_SIZE/2, col*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
+////					add(enemy);
+////					getEnemyList().add(enemy);
+////				}			
+//			}			
+//		}
+//		levelUp();
+//	}
+//	
+	public void drawRoomBoard(Room room) {
 		// have a generate new map with the player's position in mind 
-		int[][] boardArr = board.generateNewMap(numEnemies);
-		wallArr = board.getWallArray();
+		int[][] boardArr = room.getArray();
+		wallArr = room.getWallArray();
 
+		System.out.println("Stuff");
 		for (int row=0; row<=boardArr.length-1; row++){
 			for (int col=0; col<=boardArr[0].length-1; col++){
 				// wall=1
@@ -583,6 +587,47 @@ public class GameFrame extends Game {
 				}			
 			}			
 		}
+		levelUp();
+	}
+
+	public void checkRoomChange() {
+		if (player.getY() < TILE_SIZE/2) {
+			gameMap.getTopRoom();
+			clearEntities();
+			drawRoomBoard(gameMap.getCurrentRoom()); // should be no args
+			player = new Player(MAX_SCREEN_ROW/2*TILE_SIZE+TILE_SIZE/2,MAX_SCREEN_COL*TILE_SIZE-TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
+			player.setHealth(playerHealth+playerHeal);
+			add(player);
+			// should also accommodate enemy spawns and how many to spawn
+		}
+		if (player.getY() > TILE_SIZE*MAX_SCREEN_COL-TILE_SIZE/2) {
+//			gameMap.getLeftRoom();
+			gameMap.getBottomRoom();
+			clearEntities();
+			drawRoomBoard(gameMap.getCurrentRoom());
+			player = new Player( MAX_SCREEN_ROW/2*TILE_SIZE+TILE_SIZE/2, TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
+			
+			player.setHealth(playerHealth+playerHeal);
+			add(player);
+			
+		}
+		if (player.getX() < TILE_SIZE/2) { // fix labels for rows and columns
+			gameMap.getLeftRoom();
+			clearEntities();
+			drawRoomBoard(gameMap.getCurrentRoom());
+			player = new Player(MAX_SCREEN_ROW*TILE_SIZE-TILE_SIZE/2, MAX_SCREEN_COL/2*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
+			
+			player.setHealth(playerHealth+playerHeal);
+			add(player);
+		}
+		if (player.getX() > TILE_SIZE*MAX_SCREEN_COL-TILE_SIZE/2) {
+			gameMap.getRightRoom();
+			clearEntities();
+			drawRoomBoard(gameMap.getCurrentRoom());
+			player = new Player(1*TILE_SIZE+TILE_SIZE/2, MAX_SCREEN_COL/2*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
+			player.setHealth(playerHealth+playerHeal);
+			add(player);
+		}
 	}
 	
 	/** 
@@ -592,7 +637,7 @@ public class GameFrame extends Game {
 	 */
 	public void generateNewEnemies(int numEnemies) {
 		//	spawn new enemies in new enemy spawn locations
-		int[][] boardArr = board.generateNewEnemySpawns(numEnemies);
+		int[][] boardArr = gameMap.getCurrentRoom().generateNewEnemySpawns(numEnemies);
 
 		for (int row=0; row<=boardArr.length-1; row++){
 			for (int col=0; col<=boardArr[0].length-1; col++){
@@ -699,6 +744,7 @@ public class GameFrame extends Game {
 		int[] gridCoord = {gridX, gridY};
 		return gridCoord;		
 	}
+	
 
 	public double getAngleTo(int startX, int startY, int endX, int endY) {
 		double angle = (Math.atan2(endX - startX, endY - startY) * 180) / Math.PI;
@@ -726,7 +772,8 @@ public class GameFrame extends Game {
 			enemy.setDamage((int) (enemy.getDamage() * enemyDamageScale));
 		}
 		
-		levelLabel.setText("LVL: " + Integer.toString(level));
+//		levelLabel.setText("LVL: " + Integer.toString(level));
+		levelLabel.setText("ROOM: " + Integer.toString(gameMap.getCurrentRoom().getRoomID()));
 	}
 
 	/** 
