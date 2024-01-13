@@ -13,10 +13,10 @@ public class FloorPlan {
 	
 	public FloorPlan(int rooms) {
 		numRooms = rooms;
-		floorPlan = new int[rooms*2][rooms*2];
+		floorPlan = new int[(rooms*3)/2][(rooms*3)/2];
 		// start at middle left
-		startRow = rooms-1;
-		startCol = rooms-1; 
+		startRow = rooms/2;
+		startCol = rooms/2; 
 		floorPlan[startRow][startCol] = rooms;
 		generateFloorPlan();
 	}

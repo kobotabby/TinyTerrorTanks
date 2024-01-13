@@ -16,7 +16,7 @@ import handlers.MouseHandler;
 import main.GameFrame;
 
 public class Player extends Tank  {	
-	public int speed = 6; // speed normally 4
+	public int speed = 48; // speed normally 4
 	private int health; 
 	private int damage = 100; 
 	private int centerX; 
@@ -24,7 +24,7 @@ public class Player extends Tank  {
 	private int width;
 	private int height;	
 	private int turretAngle;
-	private int shotDelay = 4;	
+	private int shotDelay = 4;	//normally 4
 	private int shotTimer = 0;
 	private double drawInterval = 1000000000/12; // in seconds nanoseconds divided by needed frames per second
 	private double delta = 0;
