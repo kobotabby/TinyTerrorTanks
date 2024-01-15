@@ -16,7 +16,8 @@ import handlers.MouseHandler;
 import main.GameFrame;
 
 public class Player extends Tank  {	
-	public int speed = 48; // speed normally 4
+	public int speed = 4; // speed normally 4
+	// maybe implement collision map???? - not priority
 	private int health; 
 	private int damage = 100; 
 	private int centerX; 

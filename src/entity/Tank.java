@@ -189,15 +189,6 @@ public class Tank extends GameObject{
 		setX(getX() + (int)this.getSpeedX());	
 		setY(getY() + (int)this.getSpeedY());	
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	// getters and setters
 	public int getHealth() {
 		return this.health;

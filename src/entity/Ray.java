@@ -10,6 +10,8 @@ import java.awt.Color;
 import main.GameFrame;
 import templates.GameObject;
 
+
+/// hopefully completely remove this class
 /** Ray object class used for draw lines for deciding enemy movement */
 public class Ray extends GameObject{
 
