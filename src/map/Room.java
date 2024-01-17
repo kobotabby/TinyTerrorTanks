@@ -32,70 +32,56 @@ public class Room {
 	 * pre: numEnemies >= 0, board.length != 0, board[0].length != 0
 	 * post: a board array of dimensions rows by cols returned
 	 */
-	public int[][] generateNewMap(int numEnemies){
-		int enemyQueue = numEnemies;
-		for (int i = 0; i < this.board.length; i++) {
-		    for (int j = 0; j < this.board[i].length; j++) {
-		        this.board[i][j] = BLANK_SQUARE;
-		    }
-		}
-		// generate outer walls of the game board
-		this.board = generateSimpleRectangle();
+	public int[][] generateNewMap(int numEnemies) {
+	    int enemyQueue = numEnemies;
+	    for (int i = 0; i < this.board.length; i++) {
+	        for (int j = 0; j < this.board[i].length; j++) {
+	            this.board[i][j] = BLANK_SQUARE;
+	        }
+	    }
+	    // generate outer walls of the game board
+	    this.board = generateSimpleRectangle();
 
-		// randomize player spawns
-		int playerQueue = 1;
-		// try random locations for the player
-		while (playerQueue > 0) {
-			int locX = r.nextInt(this.board[0].length);
-			int locY = r.nextInt(this.board.length);
-			// check if the location is a blank square
-			if (this.board[locY][locX] == BLANK_SQUARE) {
-				this.board[locY][locX] = PLAYER_SQUARE;
-				// player spawn area square where no enemies are allowed in
-				int spawnArea = 4;
-				for (int x=locX-spawnArea; x<= locX+spawnArea; x++) {
-					try {
-						for (int y=locY-spawnArea; y<=locY+spawnArea; y++) {
-							try {
-								if (this.board[y][x] == BLANK_SQUARE) {
-									this.board[y][x] = PLAYER_SPAWN_AREA_SQUARE;
-								}														
-							} catch (ArrayIndexOutOfBoundsException e) {
-								// Print message when a tile is called that is out of bounds
-//								System.out.println("Out of Bounds");
-							}								
-						}
-					} catch (ArrayIndexOutOfBoundsException e) {
-						// Print message when a tile is called that is out of bounds
-//						System.out.println("Out of Bounds");
-					}
-				}
-				// player protected area to avoid trapped spawns
-				int protectedArea = 2;
-				for (int x=locX-protectedArea; x<= locX+protectedArea; x++) {
-					try {
-						for (int y=locY-protectedArea; y<=locY+protectedArea; y++) {
-							try {
-								if (this.board[y][x] == PLAYER_SPAWN_AREA_SQUARE) {
-									this.board[y][x] = ENTITY_AREA;
-								}														
-							} catch (ArrayIndexOutOfBoundsException e) {
-								// Print message when a tile is called that is out of bounds
-//								System.out.println("Out of Bounds");
-							}								
-						}
-					} catch (ArrayIndexOutOfBoundsException e) {
-						// Print message when a tile is called that is out of bounds
-//						System.out.println("Out of Bounds");
-					}
-				}
-				playerQueue--;
-			}
-		}
-		generateNewEnemySpawns(numEnemies);		
-		generateRandomWalls();
-//		showMatrix(this.board);	
-		return this.board;
+	    // randomize player spawns
+	    int playerQueue = 1;
+	    // try random locations for the player
+	    while (playerQueue > 0) {
+	        int locX = r.nextInt(this.board[0].length);
+	        int locY = r.nextInt(this.board.length);
+	        // check if the location is a blank square
+	        if (locX >= 0 && locX < this.board[0].length && locY >= 0 && locY < this.board.length) {
+	            if (this.board[locY][locX] == BLANK_SQUARE) {
+	                this.board[locY][locX] = PLAYER_SQUARE;
+	                // player spawn area square where no enemies are allowed in
+	                int spawnArea = 4;
+	                for (int x = Math.max(0, locX - spawnArea); x <= Math.min(this.board[0].length - 1, locX + spawnArea); x++) {
+	                    for (int y = Math.max(0, locY - spawnArea); y <= Math.min(this.board.length - 1, locY + spawnArea); y++) {
+	                        if (x >= 0 && x < this.board[0].length && y >= 0 && y < this.board.length) {
+	                            if (this.board[y][x] == BLANK_SQUARE) {
+	                                this.board[y][x] = PLAYER_SPAWN_AREA_SQUARE;
+	                            }
+	                        }
+	                    }
+	                }
+	                // player protected area to avoid trapped spawns
+	                int protectedArea = 2;
+	                for (int x = Math.max(0, locX - protectedArea); x <= Math.min(this.board[0].length - 1, locX + protectedArea); x++) {
+	                    for (int y = Math.max(0, locY - protectedArea); y <= Math.min(this.board.length - 1, locY + protectedArea); y++) {
+	                        if (x >= 0 && x < this.board[0].length && y >= 0 && y < this.board.length) {
+	                            if (this.board[y][x] == PLAYER_SPAWN_AREA_SQUARE) {
+	                                this.board[y][x] = ENTITY_AREA;
+	                            }
+	                        }
+	                    }
+	                }
+	                playerQueue--;
+	            }
+	        }
+	    }
+	    generateNewEnemySpawns(numEnemies);
+	    generateRandomWalls();
+//	    PowerPrint.showMatrix(board);
+	    return this.board;
 	}
 
 	/** 
@@ -115,32 +101,24 @@ public class Room {
 		int enemyQueue = numEnemies;
 		// randomize enemy spawns
 		while (enemyQueue > 0) {
-			// generate a random enemy location and check if the square is open
-			int locX = r.nextInt(this.board[0].length);
-			int locY = r.nextInt(this.board.length);
-			if (this.board[locY][locX] == BLANK_SQUARE) {
-				// surround the enemy with protected area to avoid trapped spawns
-				int protectedArea = 1;
-				for (int x=locX-protectedArea; x<= locX+protectedArea; x++) {
-					try {
-						for (int y=locY-protectedArea; y<=locY+protectedArea; y++) {
-							try {
-								if (this.board[y][x] == BLANK_SQUARE) {
-									this.board[y][x] = ENTITY_AREA;
-								}														
-							} catch (ArrayIndexOutOfBoundsException e) {
-								// Print message when a tile is called that is out of bounds
-//								System.out.println("Out of Bounds");
-							}								
-						}
-					} catch (ArrayIndexOutOfBoundsException e) {
-						// Print message when a tile is called that is out of bounds
-//						System.out.println("Out of Bounds");
-					}
-				}
-				this.board[locY][locX] = ENEMY_SQUARE;
-				enemyQueue--;
-			}
+		    // generate a random enemy location and check if the square is open
+		    int locX = r.nextInt(this.board[0].length);
+		    int locY = r.nextInt(this.board.length);
+		    if (locX >= 0 && locX < this.board[0].length && locY >= 0 && locY < this.board.length) {
+		        if (this.board[locY][locX] == BLANK_SQUARE) {
+		            // surround the enemy with protected area to avoid trapped spawns
+		            int protectedArea = 1;
+		            for (int x = Math.max(0, locX - protectedArea); x <= Math.min(this.board[0].length - 1, locX + protectedArea); x++) {
+		                for (int y = Math.max(0, locY - protectedArea); y <= Math.min(this.board.length - 1, locY + protectedArea); y++) {
+		                    if (this.board[y][x] == BLANK_SQUARE) {
+		                        this.board[y][x] = ENTITY_AREA;
+		                    }
+		                }
+		            }
+		            this.board[locY][locX] = ENEMY_SQUARE;
+		            enemyQueue--;
+		        }
+		    }
 		}
 //		showMatrix(this.board);
 		return board;

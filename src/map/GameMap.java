@@ -63,16 +63,17 @@ public class GameMap {
 			roomArr[id-1] = new Room(ROOM_WIDTH, ROOM_HEIGHT, id);
 			int[][] directions = {{0,1}, {0,-1}, {1,0}, {-1,0}};
 			// keep track of neighbors right, left, down, and up
-			// but in real world it is right, left, right, and left
+
 			int[] neighborArray = {0, 0, 0, 0};
 			for (int j=0; j<directions.length; j++) {
 				int row = currCoord[0]+directions[j][0];
 				int col = currCoord[1]+directions[j][1];
-				
-				if (rawFloorArr[row][col] != 0) {
-					neighborArray[j] = rawFloorArr[row][col];
-					createEntrance(id,j);
-				}
+			    if (row >= 0 && row < rawFloorArr.length && col >= 0 && col < rawFloorArr[0].length) {
+					if (rawFloorArr[row][col] != 0) {
+						neighborArray[j] = rawFloorArr[row][col];
+						createEntrance(id,j);
+					}
+			    }
 			}
 			roomNeighborDict.put(id, neighborArray);
 			showMatrix(roomArr[id-1].getArray());
