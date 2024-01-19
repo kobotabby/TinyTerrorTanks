@@ -65,7 +65,7 @@ public class GameFrame extends Game {
 	// decision count to show how many enemy movement decision periods have been made in a second for debugging/tuning
 	private int decisionCount;
 	private int timer;
-	private double enemySpeedScale;
+	private double enemySpeedScale; // should be static variables in tank
 	private double enemyBulletSpeedScale;
 	private double enemyFireRateScale;
 	private double enemyDamageScale;
@@ -81,12 +81,15 @@ public class GameFrame extends Game {
 	private int playerHeal;
 	private double scoreMulti;
 	protected Player player;
-	private Tank enemy;
+	InteractionHandler ih;
+//	private Tank enemy;
+	
+	// create tile array if something is not in the tile array collisions do nothing
 	private ArrayList<Projectile> projList = new ArrayList<Projectile>();
-	private ArrayList<Projectile> enemyProjList = new ArrayList<Projectile>();
-	private ArrayList<Tank> enemyList = new ArrayList<Tank>();
-	private ArrayList<Wall> wallList = new ArrayList<Wall>();
-	private ArrayList<Ray> rayList = new ArrayList<Ray>();
+	ArrayList<Projectile> enemyProjList = new ArrayList<Projectile>();
+	ArrayList<Tank> enemyList = new ArrayList<Tank>();
+	ArrayList<Wall> wallList = new ArrayList<Wall>();
+	ArrayList<Ray> rayList = new ArrayList<Ray>();
 	// create wall array
 	private int enemyRaySteps = 4;
 	private int[][] wallArr;
@@ -160,6 +163,7 @@ public class GameFrame extends Game {
 	@Override
 	public void setup() {
 		// slow down the timer to 60 fps
+		ih = new InteractionHandler(this);
 		setDelay(16);
 	} 
 
@@ -227,161 +231,12 @@ public class GameFrame extends Game {
 			player.shootProjectile(angle);
 		}
 		
+		ih.handleEnemies();
+		ih.handleProjectiles();
 		
-		// Projectile Logic
-		for (int i=0; i< getProjList().size(); i++) {
-			//	System.out.println(projList.size());
-			if (getProjList().size() != 0) {
-				Projectile bullet = getProjList().get(i);
-				// continuously check if the bullet has been deleted because it is iterating through the projectile list and removing bullets at the same time
-				if(bullet != null){
-					// check bullets that have gone out of bounds
-					if (bullet.getX()>= getSize().getWidth() || bullet.getY ()>= getSize().getHeight()) {
-						remove(bullet);
-						getProjList().remove(i);
-					}
-					// check bullets that hit enemy tanks
-					for (Tank enemy : getEnemyList()) {
-						if (enemy.checkCollision(bullet, (int) bullet.damage)) {
-							remove(bullet);
-							getProjList().remove(i);
-							break;
-						}
-					}
-					// check wall collisions
-					for (Wall wall : wallList) {
-						if (bullet.collides(wall)) {
-							bullet.bounce(wall, TILE_SIZE);
-						}
-					}
-					// check bullets that have reached their max bounces
-					if(bullet != null){
-						if (bullet.getNumBounces() >= bullet.getMaxBounces()) {
-							getProjList().remove(i);
-							remove(bullet);
-						}
-					}
-				}	
-			} else {
-				break;
-			}			   
-		}
-		// Enemy Projectile Logic - same as above logic but for enemy projectiles attacking the player
-		for (int i=0; i< getEnemyProjList().size(); i++) {
-			if (getEnemyProjList().size() != 0) {
-				Projectile bullet = getEnemyProjList().get(i);
-				if(bullet != null){
-					if (bullet.getX()>= getSize().getWidth() || bullet.getY ()>= getSize().getHeight()) {
-						remove(bullet);
-						getEnemyProjList().remove(i);
-					}	
-					if (player.checkCollision(bullet, (int) bullet.damage)) {
-						remove(bullet);
-						getEnemyProjList().remove(i);
-						break;
-					}
-				}
-				if(bullet != null){
-					for (Wall wall : wallList) {
-						if (bullet.collides(wall)) {
-							getEnemyProjList().remove(i);
-							remove(bullet);
-							break;
-						}
-					}						
-				}
-				if(bullet != null){
-					if (bullet.getNumBounces() >= bullet.getMaxBounces()) {
-						getEnemyProjList().remove(i);
-						remove(bullet);
-					}
-				}
-			}	
-		}
 		// update screen with removed bullets
 		repaint();		
-		// Enemy Logic SHOULD BE MOVED TO ENEMY TANK CLASS THAT EXTENDS TANK
-				for (int n=0; n< getEnemyList().size(); n++) {
-					if (getEnemyList().size() != 0) {
-						enemy = getEnemyList().get(n);
-						if(enemy != null){
-							enemy.setCollidingWall(false);
-							// Enemy Shooting
-							enemy.setInSight(true);
-//							drawLine(4, 40, enemy.getX(), enemy.getY(), player.getX(), player.getY());
-//							
-//							for (int i=0; i< rayList.size(); i++) {
-//								Ray ray = rayList.get(i);
-//								for (Wall wall : wallList) {
-//									if (ray.collides(wall)) {
-//										enemy.setInSight(false);
-//										break;
-//									}
-//								}
-//							}
-							// clear all rays by looping through ray list
-							for (int i=0; i< rayList.size(); i++) {
-								Ray ray = rayList.get(i);
-								remove(ray);
-							}	
-							// clear ray associations in ray list
-							rayList.clear();
-							// check if player is in sight of tank
-							double angle = getAngleTo(enemy.getX(), enemy.getY(), player.getX(), player.getY());
-							enemy.moveTurret(angle);
-							if (enemy.shotReady()) {
-								enemy.shootProjectile();
-							}
-							// Enemy Movement
-							// store original x and y locations to revert to if the enemy moves into a wall
-							originalX = enemy.getX();
-							originalY = enemy.getY();
-							// move enemy based on speed
-							enemy.setX(enemy.getX() + (int)enemy.getSpeedX());	
-							enemy.setY(enemy.getY() + (int)enemy.getSpeedY());	
 
-							for (Wall wall : wallList) {
-								if (enemy.collides(wall)) {
-									enemy.setCollidingWall(true);
-									int objectCenterX = wall.getX();
-									int objectCenterY = wall.getY();
-									int centerX = enemy.getX();
-									int centerY = enemy.getY();
-									//check vertical
-									if (centerX + TILE_SIZE + enemy.speed > objectCenterX && centerX + enemy.speed < objectCenterX + TILE_SIZE && centerY + TILE_SIZE > objectCenterY && centerY < objectCenterY + TILE_SIZE) {
-										wallVertical = true;
-									}
-									//check horizontal
-									if (centerX + TILE_SIZE> objectCenterX && centerX < objectCenterX + TILE_SIZE && centerY + TILE_SIZE + enemy.speed > objectCenterY && centerY + enemy.speed < objectCenterY + TILE_SIZE) {
-										wallHorizontal = true;
-									}
-									// If the enemy's move is illegal (hits a wall) move the enemy back to its original position in that axis.
-									if (wallHorizontal) {
-										enemy.setX(originalX);
-									}
-									if (wallVertical) {
-										enemy.setY(originalY);	
-									}
-
-								}
-							}
-							// decrease player health if they collide
-							player.checkCollision(enemy, (int) enemy.getDamage());
-							playerHealth = player.getHealth();
-							healthLabel.setText("HP: " + Integer.toString(playerHealth));
-
-							if (enemy.getHealth() <= 0) {
-								remove(enemy);
-								getEnemyList().remove(enemy);
-								score += 50*scoreMulti;
-								scoreLabel.setText("SCORE: " + Integer.toString(score));
-							}
-						}
-					}
-					else {
-						break;
-					}
-				}
 		// check if player has died
 		if (player.getHealth() <= 0) {
 			// update player health label
@@ -393,7 +248,7 @@ public class GameFrame extends Game {
 		}
 		
 		// enter the next level if all enemies have been killed
-//		if (getEnemyList().size() == 0) {
+//		if (enemyList.size() == 0) {
 //			clearEntities();
 //			generateNewBoard(numEnemies);
 //		}
@@ -408,114 +263,6 @@ public class GameFrame extends Game {
 		
 		// 
 		
-		// in class it should already have decided its angle and make a move
-//		// Enemy Movement Decision Making - Happens Every 2 Seconds
-//		if(delta >= 1) { 
-//			for (Tank enemy : getEnemyList()) {
-//				// MODE #1: Ray Based Movement - if the enemy is not touching a wall 
-//				if (enemy.isCollidingWall() == false) {
-//					// set a dictionary for the possible angles to check and a value representing the distance of the closest wall to the tank
-//					Dictionary<Integer, Integer> angleValues = new Hashtable<Integer, Integer>();					
-//					for (int rayAngle : anglesToCheck) {	
-//						// populate dictionaries with the maximum value for the nearest wall to hit a ray
-//						angleValues.put(rayAngle, enemyRaySteps);
-//						// create rays which are groups of ray objects contained in the ray list
-//						drawLine(rayAngle, 150, enemyRaySteps, enemy.getCenterX(), enemy.getCenterY());
-//					}
-//					// Ray Logic - determining angle values
-//					for (int i=0; i< rayList.size(); i++) {
-//						Ray ray = rayList.get(i);
-//						// check ray to wall collisions
-//						for (Wall wall : wallList) {
-//							if (ray.collides(wall)) {
-//								int rayAngle = ray.getAngle();
-//								// ray generation tells us how far the wall was relative to the current tank
-//								int generation = ray.getGeneration();
-//								// comments for reading the angle values of the angle value dictionary
-////								outputDictionaryValues(angleValues);
-////								System.out.println("RAY ANGLE: " + rayAngle);
-//								int currentAngleValue = (int) angleValues.get(rayAngle);
-//								// if the generation is smaller than current angle, meaning this ray's generation is closer
-//								if (generation < currentAngleValue) {
-//									// replace angle value with the closest generation
-//									angleValues.remove(rayAngle);
-//									angleValues.put(rayAngle, generation);
-//								}
-//							}
-//						}
-//					}
-//					// clear all rays 
-//					for (int i=0; i< rayList.size(); i++) {
-//						Ray ray = rayList.get(i);
-//						remove(ray);
-//						rayList.remove(i);
-//					}		
-//					// calculate the current tank's angle to player to later use as a weight
-//					double angleAtPlayer = Math.atan2(player.getCenterX() - enemy.getCenterX(), player.getCenterY() - enemy.getCenterY()) * 180 / Math.PI;
-//					// create an angle bias weight based on how close the angle in the angle values dictionary is to the actual angle to the player
-//					double angleBias = .7;
-//					// create a new weighted random class to store the different probabilities and later select a movement option
-//					WeightedRandom<Integer> possibleMoves = new WeightedRandom<>();
-//					// loop through all possible angles
-//					for (int possibleAngle : anglesToCheck) {
-//						// get range of movement from that angle using the closest ray generation stored in the angle value dictionary
-//						int range = angleValues.get(possibleAngle);
-//						// only consider angles when the range of the angle is greater than 2 and more than the wall being directly beside the tank
-//						if (range >= 2) {
-//							// weight the angle based on the distance to player and potential range of motion
-//							// math.pow makes the distribution more skewed towards certain angles making the selection easier
-//							double weight = Math.pow((Math.pow(range,3)*(angleBias/Math.abs(angleAtPlayer-possibleAngle))), 7); 
-//							possibleMoves.addEntry(possibleAngle, weight);
-//						}
-//					}					
-//					// choose an angle using the weighted random class
-//					int angleChosen = possibleMoves.getRandom();
-//					// if the angle chosen is not the default value of 999 meaning it is null set current tank speed accordingly
-//					if (angleChosen != 999) {
-//						enemy.setSpeedX((int) ((enemy.speed * (float) Math.sin(Math.toRadians(angleChosen))) + .5));
-//						enemy.setSpeedY((int) ((enemy.speed * (float) Math.cos(Math.toRadians(angleChosen))) + .5));		
-//					}
-//				}
-//				// MODE #2: Random Grid Based Movement - if the enemy is touching a wall to get unstuck 
-//				else {
-//					// find the closest grid coordinate to the current tank
-//					int[] enemyGridCoord = getClosestGridCoords(enemy.getX(), enemy.getY());
-//					int enemyCoordX = enemyGridCoord[0];
-//					int enemyCoordY = enemyGridCoord[1];
-//					ArrayList<int[]> possibleNextCoords = new ArrayList<int[]> ();
-//					// use a surrounding tiles list to check for walls and possible moves
-//					int[][] surroundingTiles = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1},{1, -1},{1, 0}, {1, 1}};
-//					for (int[] dist : surroundingTiles) {
-//						// try and catch for when a tile is called that is out of bounds
-//						try {
-//							if (wallArr[enemyCoordX+dist[0]][enemyCoordY+dist[1]] == 0) {
-//								int[] coord = {enemyCoordX+dist[0], enemyCoordY+dist[1]};
-//								possibleNextCoords.add(coord);
-//							}												
-//						} catch (ArrayIndexOutOfBoundsException e) {
-//							// Print message when a tile is called that is out of bounds
-////							System.out.println("Out of Bounds");
-//						}
-//					}
-//					Random random = new Random();			
-//					if (possibleNextCoords.size() > 1) {
-//						// generate a random number to choose a possible grid coordinate
-//						int randomSlot = random.nextInt(possibleNextCoords.size()-1);
-//						int[] selectedCoord = possibleNextCoords.get(randomSlot);
-//						// convert the grid coordinate to x and y coordinates
-//						int targetX = selectedCoord[0] * TILE_SIZE;
-//						int targetY = selectedCoord[1] * TILE_SIZE;
-//						// set course for the target square using the found angle
-//						double angle = getAngleTo(enemy.getX(), enemy.getY(), targetX, targetY);
-//						enemy.setSpeedX((int) ((enemy.speed * (float) Math.sin(Math.toRadians(angle))) + .5));
-//						enemy.setSpeedY((int) ((enemy.speed * (float) Math.cos(Math.toRadians(angle))) + .5));						
-//					}
-//				}
-//			}
-//			// reset delta
-//			delta = 0;			
-//			decisionCount++;
-//		}
 
 		if(timer >= 1000000000) {
 			// Print out how many movement decision periods have been made in the second for tuning and debugging
@@ -552,9 +299,9 @@ public class GameFrame extends Game {
 				}
 				// enemy=3
 				if (boardArr[row][col] == 3) {
-					enemy = new Tank(row*TILE_SIZE+TILE_SIZE/2, col*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
+					Tank enemy = new Tank(row*TILE_SIZE+TILE_SIZE/2, col*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
 					add(enemy);
-					getEnemyList().add(enemy);
+					enemyList.add(enemy);
 				}			
 			}			
 		}
@@ -613,9 +360,9 @@ public class GameFrame extends Game {
 		for (int row=0; row<=boardArr.length-1; row++){
 			for (int col=0; col<=boardArr[0].length-1; col++){
 				if (boardArr[row][col] == 3) {
-					enemy = new Tank(row*TILE_SIZE+TILE_SIZE/2, col*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
+					Tank enemy = new Tank(row*TILE_SIZE+TILE_SIZE/2, col*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
 					add(enemy);
-					getEnemyList().add(enemy);
+					enemyList.add(enemy);
 				}			
 			}			
 		}
@@ -703,7 +450,7 @@ public class GameFrame extends Game {
 
 		for (Ray ray : rayList) {
 			ray.setVisible(false);
-		}		
+		}
 		repaint();
 	}
 
@@ -739,7 +486,7 @@ public class GameFrame extends Game {
 		numEnemyScale *= 1.30;
 		numEnemies = (int) numEnemyScale;
 		
-		for (Tank enemy : getEnemyList()) {
+		for (Tank enemy : enemyList) {
 			enemy.speed *= enemySpeedScale;
 			enemy.setShotDelay((int) (enemy.getShotDelay() / enemyFireRateScale));
 			enemy.setProjectileSpeed((int) (enemy.getProjectileSpeed() * enemyBulletSpeedScale));
@@ -916,9 +663,6 @@ public class GameFrame extends Game {
 		this.enemyProjList = enemyProjList;
 	}	
 	
-	public ArrayList<Tank> getEnemyList() {
-		return enemyList;
-	}
 
 	public void setEnemyList(ArrayList<Tank> enemyList) {
 		this.enemyList = enemyList;
