@@ -77,7 +77,7 @@ public class GameFrame extends Game {
 	private JLabel levelLabel;
 	private int score;
 	private int level;
-	private int playerHealth;
+	int playerHealth;
 	private int playerHeal;
 	private double scoreMulti;
 	protected Player player;
