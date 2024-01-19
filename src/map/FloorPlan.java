@@ -31,21 +31,25 @@ public class FloorPlan {
 		int[][] directions = {{0,1}, {0,-1}, {1,0}, {-1,0}};
 		int[] currentRoom = {startRow, startCol};
 		while(req > 0) {
+			// add arr out of bounds check
 			// i want to roll a 0.75 chance for each direction
 			// add another random to help centralize generations
 			// add a random number of bonds to fulfill for each node
 			for (int[] dir : directions) {
 				int row = currentRoom[0]+dir[0];
 				int col = currentRoom[1]+dir[1];
-				
+				 		
 				int r = rand.nextInt(10)+1;
-				if (floorPlan[row][col] == 0) {
-					if (r >= 8) {
-						floorPlan[row][col] = req;
-						currentRoom[0] = row;
-						currentRoom[1] = col;
-						req--;
-					} 	
+				if (row >= 0 && row < floorPlan.length && col >= 0 && col < floorPlan[0].length) {
+						
+					if (floorPlan[row][col] == 0) {
+						if (r >= 8) {
+							floorPlan[row][col] = req;
+							currentRoom[0] = row;
+							currentRoom[1] = col;
+							req--;
+						} 	
+					}
 				}
 			}
 		}

@@ -16,7 +16,7 @@ import java.util.TimerTask;
 
 import javax.swing.JOptionPane;
 import javax.swing.Timer;
-
+// can convert to node based grid 
 /* 
 	SOURCES------------------------------
 	MOUSE LISTENER AND KEY LISTENER SETUP:
