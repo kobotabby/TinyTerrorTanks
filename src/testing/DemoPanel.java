@@ -38,7 +38,7 @@ public class DemoPanel extends JPanel{
 		while(col< maxCol && row < maxRow) {
 			node[col][row] = new Node(col, row);
 			this.add(node[col][row]);
-			
+			  
 			col++;
 			if (col == maxCol) {
 				col = 0;

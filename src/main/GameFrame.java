@@ -41,7 +41,7 @@ import entity.Wall;
 import handlers.KeyHandler;
 import handlers.MouseHandler;
 import map.GameMap;
-import map.Room;
+import map.RoomPlan;
 import templates.Game;
 
 ////// REPAIR BROKEN LOAD STATES
@@ -50,7 +50,7 @@ public class GameFrame extends Game {
 	//SCREEN SETTINGS
 	final int originalTileSize = 16; // fix game doesn't always boot up.
 	final int SCALE = 3;
-	final int TILE_SIZE = originalTileSize * SCALE; // 48 * 48 tile
+	public final int TILE_SIZE = originalTileSize * SCALE; // 48 * 48 tile
 	final int MAX_SCREEN_ROW = 20;
 	final int MAX_SCREEN_COL = 20;  
 	final int SCREEN_WIDTH = TILE_SIZE * MAX_SCREEN_ROW; // 48 * 16 = 768
@@ -82,6 +82,8 @@ public class GameFrame extends Game {
 	private double scoreMulti;
 	protected Player player;
 	InteractionHandler ih;
+	public PathFinder pFinder = new PathFinder(this);
+	
 //	private Tank enemy;
 	
 	// create tile array if something is not in the tile array collisions do nothing
@@ -144,7 +146,7 @@ public class GameFrame extends Game {
 		add(levelLabel);
 
 		System.out.println("GENERATING BOARD");
-		drawRoomBoard(gameMap.getCurrentRoom());
+		drawRoomBoard(getGameMap().getCurrentRoom());
 		this.addKeyListener(keyH);
 		this.addMouseListener(mouseH);
 
@@ -277,7 +279,7 @@ public class GameFrame extends Game {
 //	 * pre: board.length != 0, board[0].length != 0, numEnemies >= 0
 //	 * post: items of board array should appear on screen including wall and tank objects
 //	 */
-	public void drawRoomBoard(Room room) {
+	public void drawRoomBoard(RoomPlan room) {
 		// have a generate new map with the player's position in mind 
 		int[][] boardArr = room.getArray();
 		wallArr = room.getWallArray();
@@ -310,9 +312,9 @@ public class GameFrame extends Game {
 
 	public void checkRoomChange() {
 		if (player.getY() < TILE_SIZE/2) {
-			gameMap.getTopRoom();
+			getGameMap().getTopRoom();
 			clearEntities();
-			drawRoomBoard(gameMap.getCurrentRoom()); // should be no args
+			drawRoomBoard(getGameMap().getCurrentRoom()); // should be no args
 			player = new Player(MAX_SCREEN_ROW/2*TILE_SIZE+TILE_SIZE/2,MAX_SCREEN_COL*TILE_SIZE-TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
 			player.setHealth(playerHealth+playerHeal);
 			add(player);
@@ -320,9 +322,9 @@ public class GameFrame extends Game {
 		}
 		if (player.getY() > TILE_SIZE*MAX_SCREEN_COL-TILE_SIZE/2) {
 //			gameMap.getLeftRoom();
-			gameMap.getBottomRoom();
+			getGameMap().getBottomRoom();
 			clearEntities();
-			drawRoomBoard(gameMap.getCurrentRoom());
+			drawRoomBoard(getGameMap().getCurrentRoom());
 			player = new Player( MAX_SCREEN_ROW/2*TILE_SIZE+TILE_SIZE/2, TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
 			
 			player.setHealth(playerHealth+playerHeal);
@@ -330,18 +332,18 @@ public class GameFrame extends Game {
 			
 		}
 		if (player.getX() < TILE_SIZE/2) { // fix labels for rows and columns
-			gameMap.getLeftRoom();
+			getGameMap().getLeftRoom();
 			clearEntities();
-			drawRoomBoard(gameMap.getCurrentRoom());
+			drawRoomBoard(getGameMap().getCurrentRoom());
 			player = new Player(MAX_SCREEN_ROW*TILE_SIZE-TILE_SIZE/2, MAX_SCREEN_COL/2*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
 			
 			player.setHealth(playerHealth+playerHeal);
 			add(player);
 		}
 		if (player.getX() > TILE_SIZE*MAX_SCREEN_COL-TILE_SIZE/2) {
-			gameMap.getRightRoom();
+			getGameMap().getRightRoom();
 			clearEntities();
-			drawRoomBoard(gameMap.getCurrentRoom());
+			drawRoomBoard(getGameMap().getCurrentRoom());
 			player = new Player(1*TILE_SIZE+TILE_SIZE/2, MAX_SCREEN_COL/2*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
 			player.setHealth(playerHealth+playerHeal);
 			add(player);
@@ -355,7 +357,7 @@ public class GameFrame extends Game {
 	 */
 	public void generateNewEnemies(int numEnemies) {
 		//	spawn new enemies in new enemy spawn locations
-		int[][] boardArr = gameMap.getCurrentRoom().generateNewEnemySpawns(numEnemies);
+		int[][] boardArr = getGameMap().getCurrentRoom().generateNewEnemySpawns(numEnemies);
 
 		for (int row=0; row<=boardArr.length-1; row++){
 			for (int col=0; col<=boardArr[0].length-1; col++){
@@ -494,7 +496,7 @@ public class GameFrame extends Game {
 		}
 		
 //		levelLabel.setText("LVL: " + Integer.toString(level));
-		levelLabel.setText("ROOM: " + Integer.toString(gameMap.getCurrentRoom().getRoomID()));
+		levelLabel.setText("ROOM: " + Integer.toString(getGameMap().getCurrentRoom().getRoomID()));
 	}
 
 	/** 
@@ -666,5 +668,13 @@ public class GameFrame extends Game {
 
 	public void setEnemyList(ArrayList<Tank> enemyList) {
 		this.enemyList = enemyList;
+	}
+
+	public GameMap getGameMap() {
+		return gameMap;
+	}
+
+	public void setGameMap(GameMap gameMap) {
+		this.gameMap = gameMap;
 	}
 }

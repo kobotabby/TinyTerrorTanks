@@ -33,10 +33,10 @@ public class GameMap {
 	
 	private FloorPlan floorPlan;
 	private int[][] rawFloorArr; 
-	private Room currentRoom;
+	private RoomPlan currentRoom;
 	// manage current room and manage possible directions
 	Map<Integer, int[]> roomNeighborDict = new HashMap<>();
-	private Room[] roomArr;
+	private RoomPlan[] roomArr;
 	
 //	create a new list of room objects
 	public GameMap(int rows, int cols, int rooms){
@@ -44,7 +44,7 @@ public class GameMap {
 		System.out.println("BOARD HAS BEEN MADE");
 		floorPlan = new FloorPlan(rooms);
 		rawFloorArr = floorPlan.getFloorPlan();
-		roomArr = new Room[rooms];
+		roomArr = new RoomPlan[rooms];
 		populateRooms();
 	}
 	
@@ -60,7 +60,7 @@ public class GameMap {
 			System.out.println("Now Serving: " + id);
 			int[] currCoord = findRoomPosition(id);
 
-			roomArr[id-1] = new Room(ROOM_WIDTH, ROOM_HEIGHT, id);
+			roomArr[id-1] = new RoomPlan(ROOM_WIDTH, ROOM_HEIGHT, id);
 			int[][] directions = {{0,1}, {0,-1}, {1,0}, {-1,0}};
 			// keep track of neighbors right, left, down, and up
 
@@ -83,12 +83,12 @@ public class GameMap {
 		currentRoom = roomArr[0];
 	}
 	
-	public Room getCurrentRoom() {
+	public RoomPlan getCurrentRoom() {
 		return currentRoom;
 	}
 
 	// the player also does not spawn in on restart
-	public Room getRightRoom() {
+	public RoomPlan getRightRoom() {
 		printDict(roomNeighborDict);
 		int targetID = roomNeighborDict.get(currentRoom.getRoomID())[2];
 		System.out.println("YOU TRIED TO GO RIGHT : " + targetID + "\t LEAVING : " + currentRoom.getRoomID());
@@ -103,7 +103,7 @@ public class GameMap {
 	}
 
 	
-	public Room getLeftRoom() {
+	public RoomPlan getLeftRoom() {
 		printDict(roomNeighborDict);
 		int targetID = roomNeighborDict.get(currentRoom.getRoomID())[3];
 		System.out.println("YOU TRIED TO GO LEFT : " + targetID + "\t LEAVING : " + currentRoom.getRoomID());
@@ -117,7 +117,7 @@ public class GameMap {
 		return currentRoom;
 	}
 	
-	public Room getBottomRoom() { // CORRECT
+	public RoomPlan getBottomRoom() { // CORRECT
 		printDict(roomNeighborDict);
 		int targetID = roomNeighborDict.get(currentRoom.getRoomID())[0];
 		System.out.println("YOU TRIED TO GO DOWN : " + targetID + "\t LEAVING : " + currentRoom.getRoomID());
@@ -132,7 +132,7 @@ public class GameMap {
 	}
 
 	
-	public Room getTopRoom() {
+	public RoomPlan getTopRoom() {
 		printDict(roomNeighborDict);
 		int targetID = roomNeighborDict.get(currentRoom.getRoomID())[1];
 		System.out.println("YOU TRIED TO GO UP : " + targetID + "\t LEAVING : " + currentRoom.getRoomID());

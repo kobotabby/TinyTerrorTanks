@@ -6,4 +6,9 @@ public class HealthLabel {
 		// TODO Auto-generated constructor stub
 	}
 
+	public static void setText(String string) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

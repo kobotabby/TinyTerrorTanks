@@ -20,7 +20,7 @@ import templates.GameObject;
 
 /// figure out moving to point in grid
 /** Tank object */
-public class Tank extends GameObject{
+public class Tank extends Entity{
 	
     public int speed = 4;
 	private int movingAngle = -1;
@@ -48,11 +48,8 @@ public class Tank extends GameObject{
 	private int turretLength = 20;
 	private int turretMargin = 10; // shrinks turret radius
 	private GameFrame game;	
-	
-	
-	
-	
-	// PREDICT MOVEMENT USING MOVEMENT VECTORS
+
+
 	
 	public Tank(int x, int y, int width, int height, GameFrame g) {
 		this.setSize((int)(width*0.9), (int)(height*0.9));
@@ -78,6 +75,105 @@ public class Tank extends GameObject{
 		int turretEndY = (int)r.getHeight()/2 + (int) ((turretLength * (float) Math.cos(Math.toRadians(this.turretAngle))) + .5);
 		g2.setStroke(new BasicStroke(10));
 		g2.drawLine((int)r.getWidth()/2, (int)r.getHeight()/2, turretEndX, turretEndY);
+	}
+	
+	public void searchPath(int goalCol, int goalRow) {
+		int startCol = (this.getX() + width)/game.TILE_SIZE;
+		int startRow = (this.getY()+ height)/game.TILE_SIZE;
+		
+		game.pFinder.setNodes(startCol, startRow, goalCol, goalRow);
+		
+		// COPIED CODE FROM THE TUTORIAL
+		 if(game.pFinder.search() == true)
+	        {
+	            //Next WorldX and WorldY
+	            int nextX = game.pFinder.pathList.get(0).col * game.tileSize;
+	            int nextY = game.pFinder.pathList.get(0).row * game.tileSize;
+
+	            //Entity's solidArea position
+	            int enLeftX = worldX + solidArea.x;
+	            int enRightX = worldX + solidArea.x + solidArea.width;
+	            int enTopY = worldY + solidArea.y;
+	            int enBottomY = worldY + solidArea.y + solidArea.height;
+
+	            // TOP PATH
+	            if(enTopY > nextY && enLeftX >= nextX && enRightX < nextX + game.tileSize)
+	            {
+	                direction = "up";
+	            }
+	            // BOTTOM PATH
+	            else if(enTopY < nextY && enLeftX >= nextX && enRightX < nextX + game.tileSize)
+	            {
+	                direction = "down";
+	            }
+	            // RIGHT - LEFT PATH
+	            else if(enTopY >= nextY && enBottomY < nextY + game.tileSize)
+	            {
+	                //either left or right
+	                // LEFT PATH
+	                if(enLeftX > nextX)
+	                {
+	                    direction = "left";
+	                }
+	                // RIGHT PATH
+	                if(enLeftX < nextX)
+	                {
+	                    direction = "right";
+	                }
+	            }
+	            //OTHER EXCEPTIONS
+	            else if(enTopY > nextY && enLeftX > nextX)
+	            {
+	                // up or left
+	                direction = "up";
+	                checkCollision();
+	                if(collisionOn == true)
+	                {
+	                    direction = "left";
+	                }
+	            }
+	            else if(enTopY > nextY && enLeftX < nextX)
+	            {
+	                // up or right
+	                direction = "up";
+	                checkCollision();
+	                if(collisionOn == true)
+	                {
+	                    direction = "right";
+	                }
+	            }
+	            else if(enTopY < nextY && enLeftX > nextX)
+	            {
+	                // down or left
+	                direction = "down";
+	                checkCollision();
+	                if(collisionOn == true)
+	                {
+	                    direction = "left";
+	                }
+	            }
+	            else if(enTopY < nextY && enLeftX < nextX)
+	            {
+	                // down or right
+	                direction = "down";
+	                checkCollision();
+	                if(collisionOn == true)
+	                {
+	                    direction = "right";
+	                }
+	            }
+	            // for following play er, disable this. It should be enabled when npc walking to specified location
+//	            int nextCol = gp.pFinder.pathList.get(0).col;
+//	            int nextRow = gp.pFinder.pathList.get(0).row;
+//	            if(nextCol == goalCol && nextRow == goalRow)
+//	            {
+//	                onPath = false;
+//	            }
+	        }
+	}
+
+	public void getCoordinates() {
+		
 	}
 	
 	/** act() method inherited from the GameObject class runs every game update */
@@ -106,6 +202,12 @@ public class Tank extends GameObject{
 		if(timer >= 1000000000) {
 			timer = 0;
 		}
+		
+		if(onPath == true) {
+			int goalCol = 1;
+			int goalRow = 1;
+			searchPath(goalCol, goalRow);
+		}
 	}
 	
 	/** 
@@ -114,7 +216,8 @@ public class Tank extends GameObject{
 	 * post: true if the tank can shoot again or else false
 	 */
 	public boolean shotReady() {
-		if (shotTimer == 0 && this.isInSight()) {
+		if (shotTimer == 0 && inSight) {
+
 			return true;
 		}
 		else {
@@ -142,6 +245,7 @@ public class Tank extends GameObject{
 	 */
 	public void moveTurret(double angle) {
 		this.turretAngle = angle;
+		onPath = true; ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	}
 	
 	/** 
@@ -218,13 +322,7 @@ public class Tank extends GameObject{
 		this.collidingWall = collidingWall;
 	}
 
-	public boolean isInSight() {
-		return inSight;
-	}
 
-	public void setInSight(boolean inSight) {
-		this.inSight = inSight;
-	}
 
 	public int getDamage() {
 		return damage;
@@ -264,5 +362,10 @@ public class Tank extends GameObject{
 
 	public void setSpeedY(double speedY) {
 		this.speedY = speedY;
+	}
+
+	public void setInSight(boolean b) {
+		// TODO Auto-generated method stub
+		inSight = true;
 	}
 }

@@ -1,12 +1,9 @@
 /entity/
-<<<<<<< Updated upstream
-/map/
-/main/
-/testing/
-=======
 /handlers/
+/labels/
 /main/
 /map/
 /templates/
-/labels/
->>>>>>> Stashed changes
+/testing/
+/movement/
+/tanks/

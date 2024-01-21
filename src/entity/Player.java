@@ -51,7 +51,7 @@ public class Player extends Tank  {
 	/** paint() method paints the tank's graphics by overriding the game object paint method to include the tank turret */
 	public void paint(Graphics g) {
 		Rectangle r = getBounds();
-		Graphics2D g2 = (Graphics2D) g;
+		Graphics2D g2 = (Graphics2D) g; // should create draw tank function
 		g2.setColor(c);
 		g2.fillRect(0, 0, (int)r.getWidth(), (int)r.getHeight());
 		
