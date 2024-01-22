@@ -19,7 +19,7 @@ public class Player extends Tank  {
 	public int speed = 8; // speed normally 4
 	// maybe implement collision map???? - not priority
 	private int health; 
-	private int damage = 100; 
+	private int damage = 1000; // being ignored lol
 	private int centerX; 
 	private int centerY; 
 	private int width;
@@ -39,6 +39,7 @@ public class Player extends Tank  {
 	private GameFrame frame;
 	
 	public Player(int x, int y, int width, int height, GameFrame g) {
+		
 		super(x, y, width, height, g);
 		this.setColor(tankColor); 
 		super.speed = speed;
@@ -66,6 +67,7 @@ public class Player extends Tank  {
 	/** act() method inherited from the GameObject class runs every game update */
 	@Override
 	public void act() {
+//		getCoordinates();
 		// update turret angle based on the current mouse position
 		this.turretAngle = (int)getAngleTo(this.centerX, this.centerY, frame.mouseH.mouseX, frame.mouseH.mouseY);
 		// update shot timer

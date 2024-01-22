@@ -69,16 +69,18 @@ public class Main {
 					}
 				}
 				firstTime = false;
-				createNewGameFrame();
-			} else {
-				if (frame.gameOver) {
+			} else if (frame.gameOver) {
 					// delete current game frame and create a new one
-					frame.dispose();
-					createNewGameFrame();								
-				}
+					frame.dispose();						
+
+					System.out.println("REBOOTING...");
+						
+					createNewGameFrame();
+	
 			}
 		});
-		timer.start();		
+		timer.start();	
+		createNewGameFrame();
 	}
 	/** Method creates new game process */
 	public static void createNewGameFrame() {

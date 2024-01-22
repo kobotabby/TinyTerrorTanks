@@ -10,6 +10,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.util.ArrayList;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -18,15 +19,18 @@ import main.GameFrame;
 import templates.GameObject;
 
 
+//x and y for actual coord
+// row and col for board coord
+
 /// figure out moving to point in grid
 /** Tank object */
-public class Tank extends Entity{
+public class Tank extends GameObject{
+	public boolean onPath = true;
+	private int tileRow;
+	private int tileCol;
 	
     public int speed = 4;
-	private int movingAngle = -1;
-    private double speedX = 0;
-    private double speedY = 0;
-    private int damage = 15;
+    private int damage = 15; // normally 15
     private int health = 100; 
     private int centerX; 
 	private int centerY; 
@@ -48,17 +52,26 @@ public class Tank extends Entity{
 	private int turretLength = 20;
 	private int turretMargin = 10; // shrinks turret radius
 	private GameFrame game;	
-
+	private boolean colliding = false;
+	enum Direction {UP, DOWN, LEFT, RIGHT, NONE}
+	private Direction direction = Direction.NONE;
+	ArrayList<int[]> path;
+	
+	// movement target
+	private int targetX;
+	private int targetY;
 
 	
 	public Tank(int x, int y, int width, int height, GameFrame g) {
-		this.setSize((int)(width*0.9), (int)(height*0.9));
+		this.setSize((int)(width), (int)(height));
 		this.setColor(Color.BLUE);  
 		this.setX(x - width/2);
 		this.setY(y - height/2);
 		this.width = width;
 		this.height = height;
-		game = g;
+		game = g;		
+		tileRow = this.getCoordinates()[0];
+		tileCol = this.getCoordinates()[1];
 	}
 
 	/** paint() method paints the tank's graphics by overriding the game object paint method to include the tank turret */
@@ -82,103 +95,22 @@ public class Tank extends Entity{
 		int startRow = (this.getY()+ height)/game.TILE_SIZE;
 		
 		game.pFinder.setNodes(startCol, startRow, goalCol, goalRow);
-		
-		// COPIED CODE FROM THE TUTORIAL
-		 if(game.pFinder.search() == true)
-	        {
-	            //Next WorldX and WorldY
-	            int nextX = game.pFinder.pathList.get(0).col * game.tileSize;
-	            int nextY = game.pFinder.pathList.get(0).row * game.tileSize;
 
-	            //Entity's solidArea position
-	            int enLeftX = worldX + solidArea.x;
-	            int enRightX = worldX + solidArea.x + solidArea.width;
-	            int enTopY = worldY + solidArea.y;
-	            int enBottomY = worldY + solidArea.y + solidArea.height;
-
-	            // TOP PATH
-	            if(enTopY > nextY && enLeftX >= nextX && enRightX < nextX + game.tileSize)
-	            {
-	                direction = "up";
-	            }
-	            // BOTTOM PATH
-	            else if(enTopY < nextY && enLeftX >= nextX && enRightX < nextX + game.tileSize)
-	            {
-	                direction = "down";
-	            }
-	            // RIGHT - LEFT PATH
-	            else if(enTopY >= nextY && enBottomY < nextY + game.tileSize)
-	            {
-	                //either left or right
-	                // LEFT PATH
-	                if(enLeftX > nextX)
-	                {
-	                    direction = "left";
-	                }
-	                // RIGHT PATH
-	                if(enLeftX < nextX)
-	                {
-	                    direction = "right";
-	                }
-	            }
-	            //OTHER EXCEPTIONS
-	            else if(enTopY > nextY && enLeftX > nextX)
-	            {
-	                // up or left
-	                direction = "up";
-	                checkCollision();
-	                if(collisionOn == true)
-	                {
-	                    direction = "left";
-	                }
-	            }
-	            else if(enTopY > nextY && enLeftX < nextX)
-	            {
-	                // up or right
-	                direction = "up";
-	                checkCollision();
-	                if(collisionOn == true)
-	                {
-	                    direction = "right";
-	                }
-	            }
-	            else if(enTopY < nextY && enLeftX > nextX)
-	            {
-	                // down or left
-	                direction = "down";
-	                checkCollision();
-	                if(collisionOn == true)
-	                {
-	                    direction = "left";
-	                }
-	            }
-	            else if(enTopY < nextY && enLeftX < nextX)
-	            {
-	                // down or right
-	                direction = "down";
-	                checkCollision();
-	                if(collisionOn == true)
-	                {
-	                    direction = "right";
-	                }
-	            }
-	            // for following play er, disable this. It should be enabled when npc walking to specified location
-//	            int nextCol = gp.pFinder.pathList.get(0).col;
-//	            int nextRow = gp.pFinder.pathList.get(0).row;
-//	            if(nextCol == goalCol && nextRow == goalRow)
-//	            {
-//	                onPath = false;
-//	            }
-	        }
 	}
 
-	public void getCoordinates() {
-		
+	public int[] getCoordinates() {
+		tileRow = this.getX()/game.TILE_SIZE;
+		tileCol = this.getY()/game.TILE_SIZE;
+//		System.out.println("TILE X " + tileX);
+//		System.out.println("TILE Y " + tileY);
+		int[] coord = {tileRow, tileCol};
+		return coord;
 	}
 	
 	/** act() method inherited from the GameObject class runs every game update */
 	@Override
 	public void act() {		
+//		getCoordinates();
 		// update shot timer
 		if (shotTimer > 0) {
 //			System.out.println("Shot timer: " + shotTimer);
@@ -203,12 +135,54 @@ public class Tank extends Entity{
 			timer = 0;
 		}
 		
-		if(onPath == true) {
-			int goalCol = 1;
-			int goalRow = 1;
-			searchPath(goalCol, goalRow);
-		}
+		int startCol = (this.getX() + width)/game.TILE_SIZE;
+		int startRow = (this.getY()+ height)/game.TILE_SIZE;
+		
+//		if (this.getX() != targetX || this.getY() != targetY) {
+////			System.out.println("MOVING");
+//			moveTowardsPt(targetX, targetY);
+//		}
+//		
+	    if ((this.getX() == targetX && this.getY() == targetY) || (targetX == 0 && targetY == 0 ) ) {
+	        // Generate new target coordinates
+	        if (path == null || path.isEmpty()) {
+	            int goalCol = game.getPlayer().getCoordinates()[0];
+	            int goalRow = game.getPlayer().getCoordinates()[1];
+	            
+	            path = game.pFinder.createCoordinatePath(startCol, startRow, goalCol, goalRow);
+//	            System.out.println(path);
+	        }
+
+	        // Set the next target coordinates from the path
+	        if (!path.isEmpty()) {
+	            // prevent spasms where the next move locks the tank in place
+	        	int[] nextTarget = path.remove(0);
+	        	if (nextTarget[0] != targetX && nextTarget[1] != targetY ) {
+		            targetX = nextTarget[0] * game.TILE_SIZE;
+		            targetY = nextTarget[1] * game.TILE_SIZE;
+		            
+	        	} 
+
+	        	
+	        }
+	    }
+
+	    // Move the tank towards the target coordinates
+	    if (targetX != 0 && targetY != 0) {
+	    	
+		    moveTowardsPt(targetX, targetY);
+	    }
+	    
+	    // Visualize the target coordinates by placing a new projectile with no speed
+	    if (targetX != 0 && targetY != 0) {
+//	        Projectile targetMarker = new Projectile(targetX, targetY, 10, 0, 0, 0, Color.GREEN);
+//	        game.getProjList().add(targetMarker);
+//	        game.add(targetMarker);
+	    }
+//	    System.out.println(targetX + " " + targetY);
 	}
+	
+	
 	
 	/** 
 	 * Method checks if the tank is ready to shoot again
@@ -245,7 +219,6 @@ public class Tank extends Entity{
 	 */
 	public void moveTurret(double angle) {
 		this.turretAngle = angle;
-		onPath = true; ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	}
 	
 	/** 
@@ -258,6 +231,23 @@ public class Tank extends Entity{
 		if (collides(o)) {
 			reduceHealth(damage);
 			this.setColor(Color.RED);
+			colliding = true;
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+	/** 
+	 * Method checks if the tank has hit a game object
+	 * pre: o != null
+	 * post: tank health reduced and true returned if tank is hit, else false
+	 */
+	public boolean checkCollision(GameObject o) {
+//		System.out.println("Checking Collision...");
+		if (collides(o)) {
+			this.setColor(Color.MAGENTA);
+			colliding = true;
 			return true;
 		} else {
 			return false;
@@ -265,8 +255,9 @@ public class Tank extends Entity{
 
 	}
 	
+	
 	/** 
-	 * Method reduces tank health independently of collision.
+	 * Method moves tank health independently of collision.
 	 * pre: health > 0
 	 * post: tank health reduced 
 	 */
@@ -274,6 +265,11 @@ public class Tank extends Entity{
 		this.health -= damage;
 	}
 	
+
+	public void setTarget(int x, int y) {
+		targetX = x;
+		targetY = y;
+	}
 	/** 
 	 * Method moves the tank towards a point by finding the distance to the target point and necessary component vectors to reach there.
 	 * pre: none
@@ -281,17 +277,38 @@ public class Tank extends Entity{
 	 */
 	public void moveTowardsPt(int coordx, int coordy) {		
 		// finds the component distances to a target and finds the necessary x and y speeds based on the current speed variable
-		double distX = coordx-this.centerX;
-		double distY = coordy-this.centerY;
+		double distX = coordx-this.getX();
+		double distY = coordy-this.getY();
 		// current distance for debugging
 //		System.out.println("distX: " + distX);
 //		System.out.println("distY: " + distY);
 		double hypoteneuse = Math.sqrt(Math.pow(distX, 2) + Math.pow(distY, 2));
 		double scale = this.speed/hypoteneuse;
-		this.setSpeedX(distX*scale);
-		this.setSpeedY(distY*scale);
-		setX(getX() + (int)this.getSpeedX());	
-		setY(getY() + (int)this.getSpeedY());	
+		double speedX = distX*scale;
+		double speedY = distY*scale;
+		
+		
+		setX(getX() + (int)speedX);	
+		setY(getY() + (int)speedY);	
+		
+	
+		if (collidingWall) {
+			
+			double stuckFactor = 1.2;
+//		Try moving in all four directions
+	        setX(getX() - (int)( speedX*stuckFactor));
+	        setY(getY() - (int)( speedY*stuckFactor));
+	        setX(getX() + (int)(speedX*stuckFactor));	
+			setY(getY() + (int)(speedY*stuckFactor));	
+
+	        
+	        setX(getX() + (int) (speedY*stuckFactor));
+	        setY(getY() - (int) (speedX*stuckFactor));
+
+	        setX(getX() - (int) (speedY*stuckFactor));
+	        setY(getY() + (int) (speedX*stuckFactor));
+
+		}
 	}
 	// getters and setters
 	public int getHealth() {
@@ -348,24 +365,10 @@ public class Tank extends Entity{
 		this.shotDelay = shotDelay;
 	}
 
-	public double getSpeedX() {
-		return speedX;
-	}
 
-	public void setSpeedX(double speedX) {
-		this.speedX = speedX;
-	}
-
-	public double getSpeedY() {
-		return speedY;
-	}
-
-	public void setSpeedY(double speedY) {
-		this.speedY = speedY;
-	}
 
 	public void setInSight(boolean b) {
 		// TODO Auto-generated method stub
-		inSight = true;
+		inSight = b;
 	}
 }

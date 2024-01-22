@@ -7,19 +7,10 @@ import entity.Projectile;
 import entity.Ray;
 import entity.Tank;
 import entity.Wall;
-import labels.HealthLabel;
-import labels.ScoreLabel;
-
 // enemy movement class with enemy and player coord with game board
 public class InteractionHandler {
-//	private Player player;
-//	private ArrayList<Tank> game.enemyList; 
-//	private ArrayList<Wall> game.wallList; 
-//	private ArrayList<Projectile> playerProjList; 
-//	private ArrayList<Projectile> game.enemyProjList; 
+
 	private GameFrame game;
-//	private int playerHealth;
-	
 	
 	public InteractionHandler(GameFrame g) {
 		game = g;
@@ -40,17 +31,18 @@ public class InteractionHandler {
 					enemy.setCollidingWall(false);
 					// Enemy Shooting
 					enemy.setInSight(true);
-//					drawLine(4, 40, enemy.getX(), enemy.getY(), player.getX(), player.getY());
-//					
-//					for (int i=0; i< rayList.size(); i++) {
-//						Ray ray = rayList.get(i);
-//						for (Wall wall : game.wallList) {
-//							if (ray.collides(wall)) {
-//								enemy.setInSight(false);
-//								break;
-//							}
-//						}
-//					}
+					game.drawLine(3, 40, enemy.getX(), enemy.getY(), game.player.getX(), game.player.getY());
+					
+					for (int i=0; i< game.rayList.size(); i++) {
+						Ray ray = game.rayList.get(i);
+						ray.setVisible(true);
+						for (Wall wall : game.wallList) {
+							if (ray.collides(wall)) {
+								enemy.setInSight(false);
+								break;
+							}
+						}
+					}
 					// clear all rays by looping through ray list
 					for (int i=0; i< game.rayList.size(); i++) {
 						Ray ray = game.rayList.get(i);
@@ -59,57 +51,24 @@ public class InteractionHandler {
 					// clear ray associations in ray list
 					game.rayList.clear();
 					// check if player is in sight of tank
-					double angle = game.getAngleTo(enemy.getX(), enemy.getY(), game.player.getX(), game.player.getY());
+					double angle = game.getAngleTo(enemy.getX(), enemy.getY(), game.getPlayer().getX(), game.getPlayer().getY());
 					enemy.moveTurret(angle);
 					if (enemy.shotReady()) {
 						enemy.shootProjectile();
 					}
-					// Enemy Movement
-					// store original x and y locations to revert to if the enemy moves into a wall
-					int originalX = enemy.getX();
-					int originalY = enemy.getY();
-					// move enemy based on speed
-					enemy.setX(enemy.getX() + (int)enemy.getSpeedX());	
-					enemy.setY(enemy.getY() + (int)enemy.getSpeedY());	
 
-					for (Wall wall : game.wallList) {
-						if (enemy.collides(wall)) {
-							enemy.setCollidingWall(true);
-							int objectCenterX = wall.getX();
-							int objectCenterY = wall.getY();
-							int centerX = enemy.getX();
-							int centerY = enemy.getY();
-							boolean wallVertical = false;
-							//check vertical
-							if (centerX + game.TILE_SIZE + enemy.speed > objectCenterX && centerX + enemy.speed < objectCenterX + game.TILE_SIZE && centerY + game.TILE_SIZE > objectCenterY && centerY < objectCenterY + game.TILE_SIZE) {
-								wallVertical = true;
-							}
-							boolean wallHorizontal = false;
-							//check horizontal
-							if (centerX + game.TILE_SIZE> objectCenterX && centerX < objectCenterX + game.TILE_SIZE && centerY + game.TILE_SIZE + enemy.speed > objectCenterY && centerY + enemy.speed < objectCenterY + game.TILE_SIZE) {
-								wallHorizontal = true;
-							}
-							// If the enemy's move is illegal (hits a wall) move the enemy back to its original position in that axis.
-							if (wallHorizontal) {
-								enemy.setX(originalX);
-							}
-							if (wallVertical) {
-								enemy.setY(originalY);	
-							}
-
-						}
-					}
 					// decrease player health if they collide
-					game.player.checkCollision(enemy, (int) enemy.getDamage());
-					game.playerHealth = game.player.getHealth();
-//					HealthLabel.setText("HP: " + Integer.toString(game.playerHealth));
+					game.getPlayer().checkCollision(enemy, (int) enemy.getDamage());
+					game.playerHealth = game.getPlayer().getHealth();
+					game.healthLabel.setText("HP: " + Integer.toString(game.playerHealth));
 //
-//					if (enemy.getHealth() <= 0) {
-//						game.remove(enemy);
-//						game.enemyList.remove(enemy);
-//						score += 50*scoreMulti;
-//						ScoreLabel.setText("SCORE: " + Integer.toString(score));
-//					}
+					if (enemy.getHealth() <= 0) {
+						game.remove(enemy);
+						game.enemyList.remove(enemy);
+						// FIX AND ADD
+						game.setScore((int)(game.getScore() + 50*game.getScoreMulti()));
+						game.scoreLabel.setText("SCORE: " + Integer.toString(game.getScore()));
+					}
 				}
 			}
 			else {
@@ -178,7 +137,7 @@ public class InteractionHandler {
 						game.remove(bullet);
 						game.enemyProjList.remove(i);
 					}	
-					if (game.player.checkCollision(bullet, (int) bullet.damage)) {
+					if (game.getPlayer().checkCollision(bullet, (int) bullet.damage)) {
 						game.remove(bullet);
 						game.enemyProjList.remove(i);
 						break;

@@ -41,9 +41,11 @@ public class GameMap {
 //	create a new list of room objects
 	public GameMap(int rows, int cols, int rooms){
 		this.board = new int[ROOM_WIDTH][ROOM_HEIGHT];
-		System.out.println("BOARD HAS BEEN MADE");
+		System.out.println("BIG BOARD HAS STARTED");
 		floorPlan = new FloorPlan(rooms);
+		System.out.println("Floor Plan has been MADE");
 		rawFloorArr = floorPlan.getFloorPlan();
+		System.out.println("FLOOR ARRAY HAS BEEN MADE");
 		roomArr = new RoomPlan[rooms];
 		populateRooms();
 	}
@@ -88,8 +90,8 @@ public class GameMap {
 	}
 
 	// the player also does not spawn in on restart
-	public RoomPlan getRightRoom() {
-		printDict(roomNeighborDict);
+	public RoomPlan enterRightRoom() {
+//		printDict(roomNeighborDict);
 		int targetID = roomNeighborDict.get(currentRoom.getRoomID())[2];
 		System.out.println("YOU TRIED TO GO RIGHT : " + targetID + "\t LEAVING : " + currentRoom.getRoomID());
 		if (targetID != 0) {
@@ -103,8 +105,8 @@ public class GameMap {
 	}
 
 	
-	public RoomPlan getLeftRoom() {
-		printDict(roomNeighborDict);
+	public RoomPlan enterLeftRoom() {
+//		printDict(roomNeighborDict);
 		int targetID = roomNeighborDict.get(currentRoom.getRoomID())[3];
 		System.out.println("YOU TRIED TO GO LEFT : " + targetID + "\t LEAVING : " + currentRoom.getRoomID());
 		if (targetID != 0) {
@@ -117,8 +119,8 @@ public class GameMap {
 		return currentRoom;
 	}
 	
-	public RoomPlan getBottomRoom() { // CORRECT
-		printDict(roomNeighborDict);
+	public RoomPlan enterBottomRoom() {
+//		printDict(roomNeighborDict);
 		int targetID = roomNeighborDict.get(currentRoom.getRoomID())[0];
 		System.out.println("YOU TRIED TO GO DOWN : " + targetID + "\t LEAVING : " + currentRoom.getRoomID());
 		if (targetID != 0) {
@@ -132,8 +134,8 @@ public class GameMap {
 	}
 
 	
-	public RoomPlan getTopRoom() {
-		printDict(roomNeighborDict);
+	public RoomPlan enterTopRoom() {
+//		printDict(roomNeighborDict);
 		int targetID = roomNeighborDict.get(currentRoom.getRoomID())[1];
 		System.out.println("YOU TRIED TO GO UP : " + targetID + "\t LEAVING : " + currentRoom.getRoomID());
 		if (targetID != 0) {

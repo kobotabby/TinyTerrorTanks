@@ -10,20 +10,32 @@ public class RoomPlan {
 	private final int WALL_SQUARE = 1;
 	private final int PLAYER_SQUARE = 2;
 	private final int ENEMY_SQUARE = 3;
-	private final int PLAYER_SPAWN_AREA_SQUARE = 4;
-	private final int ENTITY_AREA = 5;
+	private final int PROTECTED_SQUARE = 4;
 	private final int ENTRANCE_SQUARE = 6;
+	
+	private final int ENTRANCE_BUFFER_AMOUNT = 6;
+	private static boolean firstTime = true;
 
 	// create a new random class to use for board generation 
 	private Random r = new Random();
 	private int roomID = 0;
 	
+
+	private boolean firstEncounter = true;
+	
 	// create empty board with constructor
 	public RoomPlan(int rows, int cols, int id) {
 		roomID = id;
+		System.out.println(roomID);
 		templateBoard = new int[rows][cols];
-		templateBoard = generateNewMap(0);
-		System.out.println("BOARD HAS BEEN MADE");
+		if (roomID == 1) {
+			firstTime = true;
+			templateBoard = generateNewMap(0); // first time spawn player no enemies
+		} else {
+			templateBoard = generateNewMap(roomID); // spawn an equal amount of enemies to room number
+		}
+		
+//		System.out.println("BOARD HAS BEEN MADE");
 	}
 
 	/** 
@@ -50,14 +62,22 @@ public class RoomPlan {
 	        // check if the location is a blank square
 	        if (locX >= 0 && locX < this.templateBoard[0].length && locY >= 0 && locY < this.templateBoard.length) {
 	            if (this.templateBoard[locY][locX] == BLANK_SQUARE) {
-	                this.templateBoard[locY][locX] = PLAYER_SQUARE;
+	            	// do not generate a new player spawn for subsequent rooms
+	            	if (firstTime == true) {
+		                this.templateBoard[locY][locX] = PLAYER_SQUARE;
+		                firstTime = false;
+	            		
+	            	} else {
+	            		this.templateBoard[locY][locX] = BLANK_SQUARE;
+	            	}
+	            	
 	                // player spawn area square where no enemies are allowed in
 	                int spawnArea = 4;
 	                for (int x = Math.max(0, locX - spawnArea); x <= Math.min(this.templateBoard[0].length - 1, locX + spawnArea); x++) {
 	                    for (int y = Math.max(0, locY - spawnArea); y <= Math.min(this.templateBoard.length - 1, locY + spawnArea); y++) {
 	                        if (x >= 0 && x < this.templateBoard[0].length && y >= 0 && y < this.templateBoard.length) {
 	                            if (this.templateBoard[y][x] == BLANK_SQUARE) {
-	                                this.templateBoard[y][x] = PLAYER_SPAWN_AREA_SQUARE;
+	                                this.templateBoard[y][x] = PROTECTED_SQUARE;
 	                            }
 	                        }
 	                    }
@@ -67,8 +87,8 @@ public class RoomPlan {
 	                for (int x = Math.max(0, locX - protectedArea); x <= Math.min(this.templateBoard[0].length - 1, locX + protectedArea); x++) {
 	                    for (int y = Math.max(0, locY - protectedArea); y <= Math.min(this.templateBoard.length - 1, locY + protectedArea); y++) {
 	                        if (x >= 0 && x < this.templateBoard[0].length && y >= 0 && y < this.templateBoard.length) {
-	                            if (this.templateBoard[y][x] == PLAYER_SPAWN_AREA_SQUARE) {
-	                                this.templateBoard[y][x] = ENTITY_AREA;
+	                            if (this.templateBoard[y][x] == PROTECTED_SQUARE) {
+	                                this.templateBoard[y][x] = PROTECTED_SQUARE;
 	                            }
 	                        }
 	                    }
@@ -110,7 +130,7 @@ public class RoomPlan {
 		            for (int x = Math.max(0, locX - protectedArea); x <= Math.min(this.templateBoard[0].length - 1, locX + protectedArea); x++) {
 		                for (int y = Math.max(0, locY - protectedArea); y <= Math.min(this.templateBoard.length - 1, locY + protectedArea); y++) {
 		                    if (this.templateBoard[y][x] == BLANK_SQUARE) {
-		                        this.templateBoard[y][x] = ENTITY_AREA;
+		                        this.templateBoard[y][x] = PROTECTED_SQUARE;
 		                    }
 		                }
 		            }
@@ -129,7 +149,7 @@ public class RoomPlan {
 	 * post: the private board array has been modified to include random walls
 	 */
 	private int[][] generateRandomWalls(){
-		int wallPercentage = 12;
+		int wallPercentage = 12; // normally 12 - SPECIAL ROOMS 5 PERCENT
 		int wallQueue = (templateBoard.length * templateBoard[0].length)*wallPercentage/100;
 		
 		while (wallQueue > BLANK_SQUARE) {
@@ -137,10 +157,11 @@ public class RoomPlan {
 			int locX = r.nextInt(this.templateBoard[0].length);
 			int locY = r.nextInt(this.templateBoard.length);
 
-			if (this.templateBoard[locY][locX] == BLANK_SQUARE || this.templateBoard[locY][locX] == PLAYER_SPAWN_AREA_SQUARE) {
+			if (this.templateBoard[locY][locX] == BLANK_SQUARE || this.templateBoard[locY][locX] == PROTECTED_SQUARE) {
 				this.templateBoard[locY][locX] = WALL_SQUARE;
 				wallQueue--;
 			}
+			
 		}
 		return templateBoard;
 	}
@@ -211,33 +232,34 @@ public class RoomPlan {
 	public void createLeftEntrance(){
 		for (int row=8; row<=templateBoard.length-1-8; row++){
 			templateBoard[row][0] = ENTRANCE_SQUARE;
-		}
-		for (int row=8; row<=templateBoard.length-1-8; row++){
-			templateBoard[row][1] = BLANK_SQUARE;
+			for (int i=1;i<=ENTRANCE_BUFFER_AMOUNT; i++) {
+				templateBoard[row][i] = PROTECTED_SQUARE;
+			}
 		}
 	}
 	public void createRightEntrance(){
 		for (int row=8; row<=templateBoard.length-1-8; row++){
 			templateBoard[row][templateBoard[0].length-1] = ENTRANCE_SQUARE;
+			for (int i=1;i<=ENTRANCE_BUFFER_AMOUNT; i++) {
+				templateBoard[row][templateBoard[0].length-1-i] = PROTECTED_SQUARE;
+			}
 		}
-		for (int row=8; row<=templateBoard.length-1-8; row++){
-			templateBoard[row][templateBoard[0].length-2] = BLANK_SQUARE;
-		}
+
 	}	
 	public void createTopEntrance(){
 		for (int col=8; col<=templateBoard[0].length-1-8; col++){
 			templateBoard[0][col] = ENTRANCE_SQUARE;
-		}
-		for (int col=8; col<=templateBoard[0].length-1-8; col++){
-			templateBoard[1][col] = BLANK_SQUARE;
+			for (int i=1;i<=ENTRANCE_BUFFER_AMOUNT; i++) {
+				templateBoard[i][col] = PROTECTED_SQUARE;
+			}
 		}
 	}
 	public void createBottomEntrance(){
 		for (int col=8; col<=templateBoard[0].length-1-8; col++){
 			templateBoard[templateBoard.length-1][col] = ENTRANCE_SQUARE;
-		}
-		for (int col=8; col<=templateBoard[0].length-1-8; col++){
-			templateBoard[templateBoard.length-2][col] = BLANK_SQUARE;
+			for (int i=1;i<=ENTRANCE_BUFFER_AMOUNT; i++) {
+				templateBoard[templateBoard.length-1-i][col] = PROTECTED_SQUARE;
+			}
 		}
 	}
 	public int[][] getArray(){

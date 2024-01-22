@@ -13,7 +13,7 @@ public class FloorPlan {
 	
 	public FloorPlan(int rooms) {
 		numRooms = rooms;
-		floorPlan = new int[(rooms*3)/2][(rooms*3)/2];
+		floorPlan = new int[rooms*2][rooms*2];
 		startRow = rooms/2;
 		startCol = rooms/2; 
 		floorPlan[startRow][startCol] = rooms;
@@ -26,10 +26,14 @@ public class FloorPlan {
 	
 	private void generateFloorPlan() {
 		int req = numRooms-1;
+		int loops = 0;
 		
 		int[][] directions = {{0,1}, {0,-1}, {1,0}, {-1,0}};
 		int[] currentRoom = {startRow, startCol};
-		while(req > 0) {
+		// prevent infinite loops
+		while(req > 0 && loops < 200) {
+			loops ++;
+//			System.out.println("jammy");
 			for (int[] dir : directions) {
 				int row = currentRoom[0]+dir[0];
 				int col = currentRoom[1]+dir[1];
@@ -48,6 +52,7 @@ public class FloorPlan {
 				}
 			}
 		}
+//		System.out.println("LOOOOOOOOOOOOPS: " + loops);
 
 	}
 	public int getNumRooms() {

@@ -15,9 +15,9 @@ import templates.GameObject;
 /** Ray object class used for draw lines for deciding enemy movement */
 public class Ray extends GameObject{
 
-	private double angle;
+	private double angle = 0;
 	private int size = 20;
-	private int generation;
+	private int generation = 0;
 
 	public Ray(int x, int y, double angle, int generation, GameFrame game) {
 		this.setSize(size, size);
@@ -26,6 +26,13 @@ public class Ray extends GameObject{
 		this.setY(y - size / 2);
 		this.angle = angle;
 		this.generation = generation;
+	}
+	public Ray(int x, int y, GameFrame game) {
+		this.setSize(size, size);
+		this.setColor(Color.CYAN);
+		this.setX(x - size / 2);
+		this.setY(y - size / 2);
+
 	}
 	
 	/** act() method inherited from the GameObject class runs every game update */
