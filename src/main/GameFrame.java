@@ -41,6 +41,7 @@ import entity.Tank;
 import entity.Wall;
 import handlers.KeyHandler;
 import handlers.MouseHandler;
+import labels.TimerLabel;
 import map.GameMap;
 import map.RoomPlan;
 import templates.Game;
@@ -74,10 +75,13 @@ public class GameFrame extends Game {
 //	private int numEnemies;
 //	private double numEnemyScale;
 	public boolean gameOver = false;
-	public JLabel scoreLabel;	
+	public JLabel scoreLabel;
 	public JLabel healthLabel;	
 	public JLabel levelLabel;
-	private int score;
+	public JLabel timeLabel; // treat as normal label
+	TimerLabel gameTime;
+	
+	int score;
 	private int level;
 	int playerHealth;
 	private int playerHeal;
@@ -108,7 +112,7 @@ public class GameFrame extends Game {
 		
 		// pre initialize player to prevent null pointers
 		player = new Player(0*TILE_SIZE+TILE_SIZE/2, 0*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
-		player.setHealth(playerHealth+playerHeal);
+		player.setHealth(playerHealth);
 		add(player);
 		
 		
@@ -128,7 +132,7 @@ public class GameFrame extends Game {
 		setScore(0);
 		level = 0;
 		playerHealth = 250;
-		playerHeal = 250; // normal 15
+		setPlayerHeal(15); // normal 15
 		setScoreMulti(1);
 		projList = new ArrayList<Projectile>();
 		enemyProjList = new ArrayList<Projectile>();
@@ -141,7 +145,7 @@ public class GameFrame extends Game {
 		// game GUI
 		scoreLabel = new JLabel("SCORE: 0");
 		scoreLabel.setForeground(Color.BLACK);
-		scoreLabel.setBounds(50, 0, 400, 48);
+//		scoreLabel.setBounds(50, 0, 400, 48);
 		scoreLabel.setFont(new Font("Sans-serif", Font.BOLD, 48));
 		add(scoreLabel);
 
@@ -156,8 +160,14 @@ public class GameFrame extends Game {
 		levelLabel.setBounds(700, 910, 400, 48);
 		levelLabel.setFont(new Font("Sans-serif", Font.BOLD, 48));
 		add(levelLabel);
-
 		
+		timeLabel = new JLabel("RUN: 00:00");
+		timeLabel.setForeground(Color.BLACK);
+		timeLabel.setBounds(50, 0, 400, 48);
+		timeLabel.setFont(new Font("Sans-serif", Font.BOLD, 48));
+		add(timeLabel);
+		
+		gameTime = new TimerLabel();
 
 				
 		this.addKeyListener(keyH);
@@ -183,11 +193,16 @@ public class GameFrame extends Game {
 		drawRoomBoard(getGameMap().getCurrentRoom());
 		ih = new InteractionHandler(this);
 		setDelay(16);
+		gameTime.reset();
 	} 
 
 	/** act() method contains core game logic and is called every game update */
 	@Override
 	public void act() {
+		
+		if (gameTime.secondPassed()) {
+			timeLabel.setText("RUN: " + gameTime.getFormattedTime());			
+		}
 		// Player Movement
 		// check walls the player currently collides with
 		int originalX = getPlayer().getX();
@@ -269,6 +284,8 @@ public class GameFrame extends Game {
 			this.gameOver();
 		}
 		
+		
+		
 		// enter the next level if all enemies have been killed
 //		if (enemyList.size() == 0) {
 //			clearEntities();
@@ -319,7 +336,7 @@ public class GameFrame extends Game {
 				if (boardArr[row][col] == 2 && firstTime) {
 					player.setX(row*TILE_SIZE);
 					player.setY(col*TILE_SIZE);
-					player.setHealth(playerHealth+playerHeal);
+					player.setHealth(playerHealth);
 					firstTime = false;
 				}
 				// enemy=3
@@ -339,7 +356,7 @@ public class GameFrame extends Game {
 			clearEntities();
 			drawRoomBoard(getGameMap().getCurrentRoom()); // should be no args
 			setPlayer(new Player(MAX_SCREEN_ROW/2*TILE_SIZE+TILE_SIZE/2,MAX_SCREEN_COL*TILE_SIZE-TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this));
-			getPlayer().setHealth(playerHealth+playerHeal);
+			getPlayer().setHealth(playerHealth);
 			add(getPlayer());
 			// should also accommodate enemy spawns and how many to spawn
 		}
@@ -350,7 +367,7 @@ public class GameFrame extends Game {
 			drawRoomBoard(getGameMap().getCurrentRoom());
 			setPlayer(new Player( MAX_SCREEN_ROW/2*TILE_SIZE+TILE_SIZE/2, TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this));
 			
-			getPlayer().setHealth(playerHealth+playerHeal);
+			getPlayer().setHealth(playerHealth+getPlayerHeal());
 			add(getPlayer());
 			
 		}
@@ -360,7 +377,7 @@ public class GameFrame extends Game {
 			drawRoomBoard(getGameMap().getCurrentRoom());
 			setPlayer(new Player(MAX_SCREEN_ROW*TILE_SIZE-TILE_SIZE/2, MAX_SCREEN_COL/2*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this));
 			
-			getPlayer().setHealth(playerHealth+playerHeal);
+			getPlayer().setHealth(playerHealth+getPlayerHeal());
 			add(getPlayer());
 		}
 		if (getPlayer().getX() > TILE_SIZE*MAX_SCREEN_COL-TILE_SIZE/2) {
@@ -368,7 +385,7 @@ public class GameFrame extends Game {
 			clearEntities();
 			drawRoomBoard(getGameMap().getCurrentRoom());
 			setPlayer(new Player(1*TILE_SIZE+TILE_SIZE/2, MAX_SCREEN_COL/2*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this));
-			getPlayer().setHealth(playerHealth+playerHeal);
+			getPlayer().setHealth(playerHealth+getPlayerHeal());
 			add(getPlayer());
 		}
 	}
@@ -410,6 +427,7 @@ public class GameFrame extends Game {
 		this.add(healthLabel);
 		getPlayer().setHealth(playerHealth);
 		this.add(levelLabel);
+		this.add(timeLabel);
 	}
 
 	/** 
@@ -650,6 +668,17 @@ public class GameFrame extends Game {
 	}
 
 	/** 
+	 * Method calls the game over dialogue.
+	 * pre: game stopped
+	 * post: game over dialogue displayed
+	 */
+	public void gameWon() {
+		_WinDialog d = new _WinDialog(this, "You Escaped.");
+		d.setVisible(true);
+	}
+
+	
+	/** 
 	 * Method displays game over / win dialog.
 	 * pre: game stopped
 	 * post: game over dialogue displayed in the center of the JFrame
@@ -723,5 +752,13 @@ public class GameFrame extends Game {
 
 	public void setScoreMulti(double scoreMulti) {
 		this.scoreMulti = scoreMulti;
+	}
+
+	public int getPlayerHeal() {
+		return playerHeal;
+	}
+
+	public void setPlayerHeal(int playerHeal) {
+		this.playerHeal = playerHeal;
 	}
 }

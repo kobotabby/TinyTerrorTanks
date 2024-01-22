@@ -32,7 +32,7 @@ public class FloorPlan {
 		int[] currentRoom = {startRow, startCol};
 		// prevent infinite loops
 		while(req > 0 && loops < 200) {
-			loops ++;
+//			loops ++;
 //			System.out.println("jammy");
 			for (int[] dir : directions) {
 				int row = currentRoom[0]+dir[0];

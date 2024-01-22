@@ -17,11 +17,11 @@ public class InteractionHandler {
 	
 	}
 	
-	
-	public void handleBullets() {
-		
-	}
-	
+//	
+//	public void handleBullets() {
+//		
+//	}
+//	
 	public void handleEnemies() {
 		// Enemy Logic SHOULD BE MOVED TO ENEMY TANK CLASS THAT EXTENDS TANK
 		for (int n=0; n< game.enemyList.size(); n++) {
@@ -31,25 +31,25 @@ public class InteractionHandler {
 					enemy.setCollidingWall(false);
 					// Enemy Shooting
 					enemy.setInSight(true);
-					game.drawLine(3, 40, enemy.getX(), enemy.getY(), game.player.getX(), game.player.getY());
-					
-					for (int i=0; i< game.rayList.size(); i++) {
-						Ray ray = game.rayList.get(i);
-						ray.setVisible(true);
-						for (Wall wall : game.wallList) {
-							if (ray.collides(wall)) {
-								enemy.setInSight(false);
-								break;
-							}
-						}
-					}
-					// clear all rays by looping through ray list
-					for (int i=0; i< game.rayList.size(); i++) {
-						Ray ray = game.rayList.get(i);
-						game.remove(ray);
-					}	
-					// clear ray associations in ray list
-					game.rayList.clear();
+//					game.drawLine(3, 40, enemy.getX(), enemy.getY(), game.player.getX(), game.player.getY());
+//					
+//					for (int i=0; i< game.rayList.size(); i++) {
+//						Ray ray = game.rayList.get(i);
+//						ray.setVisible(true);
+//						for (Wall wall : game.wallList) {
+//							if (ray.collides(wall)) {
+//								enemy.setInSight(false);
+//								break;
+//							}
+//						}
+//					}
+//					// clear all rays by looping through ray list
+//					for (int i=0; i< game.rayList.size(); i++) {
+//						Ray ray = game.rayList.get(i);
+//						game.remove(ray);
+//					}	
+//					// clear ray associations in ray list
+//					game.rayList.clear();
 					// check if player is in sight of tank
 					double angle = game.getAngleTo(enemy.getX(), enemy.getY(), game.getPlayer().getX(), game.getPlayer().getY());
 					enemy.moveTurret(angle);
@@ -65,6 +65,9 @@ public class InteractionHandler {
 					if (enemy.getHealth() <= 0) {
 						game.remove(enemy);
 						game.enemyList.remove(enemy);
+						game.getPlayer().setHealth(game.playerHealth+game.getPlayerHeal());
+//						game.timeLabel.wasetText(game.gameTime.deductTime(5));			
+						
 						// FIX AND ADD
 						game.setScore((int)(game.getScore() + 50*game.getScoreMulti()));
 						game.scoreLabel.setText("SCORE: " + Integer.toString(game.getScore()));
@@ -77,16 +80,16 @@ public class InteractionHandler {
 		}
 	}
 	
-	public void handleEnemyMovement () {
-
-		
-	}
-	
-	public void handleCollisionDetection() {
-		
-		
-	}
-	
+//	public void handleEnemyMovement () {
+//
+//		
+//	}
+//	
+//	public void handleCollisionDetection() {
+//		
+//		
+//	}
+//	
 
 	
 	public void handleProjectiles() {
