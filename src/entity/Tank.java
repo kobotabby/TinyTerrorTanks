@@ -1,9 +1,4 @@
-/**
- * @author Ethan Gan
- * Computer Science
- * 1/23/2023
- * Tank class creates little tanks on to a GameFrame object.
- */
+
 package entity;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -18,12 +13,13 @@ import javax.swing.JLabel;
 import main.GameFrame;
 import templates.GameObject;
 
-
-//x and y for actual coord
-// row and col for board coord
-
-/// figure out moving to point in grid
-/** Tank object */
+/**
+ * @author Ethan Gan
+ * Computer Science
+ * 1/23/2023 - MOSTLY OLD CODE
+ * UPDATED 1/22/2024: Added pathfinding controls
+ * Tank class creates little tanks on to a GameFrame object.
+ */
 public class Tank extends GameObject{
 	public boolean onPath = true;
 	private int tileRow;
@@ -53,8 +49,6 @@ public class Tank extends GameObject{
 	private int turretMargin = 10; // shrinks turret radius
 	private GameFrame game;	
 	private boolean colliding = false;
-	enum Direction {UP, DOWN, LEFT, RIGHT, NONE}
-	private Direction direction = Direction.NONE;
 	ArrayList<int[]> path;
 	
 	// movement target
@@ -138,11 +132,6 @@ public class Tank extends GameObject{
 		int startCol = (this.getX() + width)/game.TILE_SIZE;
 		int startRow = (this.getY()+ height)/game.TILE_SIZE;
 		
-//		if (this.getX() != targetX || this.getY() != targetY) {
-////			System.out.println("MOVING");
-//			moveTowardsPt(targetX, targetY);
-//		}
-//		
 	    if ((this.getX() == targetX && this.getY() == targetY) || (targetX == 0 && targetY == 0 ) ) {
 	        // Generate new target coordinates
 	        if (path == null || path.isEmpty()) {
@@ -160,10 +149,7 @@ public class Tank extends GameObject{
 	        	if (nextTarget[0] != targetX && nextTarget[1] != targetY ) {
 		            targetX = nextTarget[0] * game.TILE_SIZE;
 		            targetY = nextTarget[1] * game.TILE_SIZE;
-		            
 	        	} 
-
-	        	
 	        }
 	    }
 
@@ -174,11 +160,11 @@ public class Tank extends GameObject{
 	    }
 	    
 	    // Visualize the target coordinates by placing a new projectile with no speed
-	    if (targetX != 0 && targetY != 0) {
+//	    if (targetX != 0 && targetY != 0) {
 //	        Projectile targetMarker = new Projectile(targetX, targetY, 10, 0, 0, 0, Color.GREEN);
 //	        game.getProjList().add(targetMarker);
 //	        game.add(targetMarker);
-	    }
+//	    }
 //	    System.out.println(targetX + " " + targetY);
 	}
 	
@@ -291,22 +277,23 @@ public class Tank extends GameObject{
 		setX(getX() + (int)speedX);	
 		setY(getY() + (int)speedY);	
 		
-	
+		// get unstuck when approaching a wall
 		if (collidingWall) {
 			
-			double stuckFactor = 1.2;
-//		Try moving in all four directions
-	        setX(getX() - (int)( speedX*stuckFactor));
-	        setY(getY() - (int)( speedY*stuckFactor));
-	        setX(getX() + (int)(speedX*stuckFactor));	
-			setY(getY() + (int)(speedY*stuckFactor));	
+			// stuck factor is the amount of movement to get unstuck
+			double struggleFactor = 1.2;
+			//	Try moving in all four directions
+	        setX(getX() - (int)( speedX*struggleFactor));
+	        setY(getY() - (int)( speedY*struggleFactor));
+	        setX(getX() + (int)(speedX*struggleFactor));	
+			setY(getY() + (int)(speedY*struggleFactor));	
 
 	        
-	        setX(getX() + (int) (speedY*stuckFactor));
-	        setY(getY() - (int) (speedX*stuckFactor));
+	        setX(getX() + (int) (speedY*struggleFactor));
+	        setY(getY() - (int) (speedX*struggleFactor));
 
-	        setX(getX() - (int) (speedY*stuckFactor));
-	        setY(getY() + (int) (speedX*stuckFactor));
+	        setX(getX() - (int) (speedY*struggleFactor));
+	        setY(getY() + (int) (speedX*struggleFactor));
 
 		}
 	}
@@ -339,8 +326,6 @@ public class Tank extends GameObject{
 		this.collidingWall = collidingWall;
 	}
 
-
-
 	public int getDamage() {
 		return damage;
 	}
@@ -365,10 +350,7 @@ public class Tank extends GameObject{
 		this.shotDelay = shotDelay;
 	}
 
-
-
 	public void setInSight(boolean b) {
-		// TODO Auto-generated method stub
 		inSight = b;
 	}
 }

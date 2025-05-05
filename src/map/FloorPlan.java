@@ -10,7 +10,7 @@ public class FloorPlan {
 	private Random rand = new Random();
 	
 	
-	
+	/** Constructor creates large empty array for potential room positions */
 	public FloorPlan(int rooms) {
 		numRooms = rooms;
 		floorPlan = new int[rooms*2][rooms*2];
@@ -24,16 +24,16 @@ public class FloorPlan {
 		return floorPlan;
 	}
 	
+	/** Method generates a high level arrangement of the different numbered rooms.*/
 	private void generateFloorPlan() {
 		int req = numRooms-1;
 		int loops = 0;
-		
+		// loop through different directions for each room to decide where the next room should be 
 		int[][] directions = {{0,1}, {0,-1}, {1,0}, {-1,0}};
 		int[] currentRoom = {startRow, startCol};
-		// prevent infinite loops
+		// prevent infinite loops in the odd chance that a room ends up boxing itself up
 		while(req > 0 && loops < 200) {
-//			loops ++;
-//			System.out.println("jammy");
+			loops ++;
 			for (int[] dir : directions) {
 				int row = currentRoom[0]+dir[0];
 				int col = currentRoom[1]+dir[1];
@@ -52,9 +52,14 @@ public class FloorPlan {
 				}
 			}
 		}
-//		System.out.println("LOOOOOOOOOOOOPS: " + loops);
-
+		// if a room boxed itself generate again
+		if (loops == 200) {
+			floorPlan = new int[numRooms*2][numRooms*2];
+			floorPlan[numRooms][numRooms] = numRooms;
+			generateFloorPlan();
+		}
 	}
+	// getter or setter
 	public int getNumRooms() {
 		return numRooms;
 	}

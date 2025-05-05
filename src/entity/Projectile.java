@@ -1,14 +1,15 @@
+
+package entity;
+import java.awt.Color;
+
+import templates.GameObject;
+
 /**
  * @author Ethan Gan
  * Computer Science
  * 1/23/2023
  * Projectile class that manages projectiles that are shot from tanks in the GameFrame class.
  */
-package entity;
-import java.awt.Color;
-
-import templates.GameObject;
-
 public class Projectile extends GameObject {
 	private double angle;
 	private double speed;

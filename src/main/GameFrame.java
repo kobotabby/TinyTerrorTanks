@@ -1,7 +1,8 @@
 /**
  * @author Ethan Gan
  * Computer Science
- * 1/12/2024
+ * 1/23/2023
+ * UPDATED 1/22/2024: Added new timeLabel to keep track of the game time and added compatibility with dungeon floors
  * GameFrame class controls the running TankRunner Game.
  */
 package main;
@@ -36,21 +37,17 @@ import javax.swing.*;
 import ai.PathFinder;
 import entity.Player;
 import entity.Projectile;
-import entity.Ray;
 import entity.Tank;
 import entity.Wall;
 import handlers.KeyHandler;
 import handlers.MouseHandler;
-import labels.TimerLabel;
 import map.GameMap;
 import map.RoomPlan;
 import templates.Game;
 
-////// REPAIR BROKEN LOAD STATES
 /* GameFrame manages the majority of the game's logic and object interactions */
 public class GameFrame extends Game {
 	//SCREEN SETTINGS
-	
 	final int originalTileSize = 16; // fix game doesn't always boot up.
 	final int SCALE = 3;
 	public final int TILE_SIZE = originalTileSize * SCALE; // 48 * 48 tile
@@ -59,35 +56,32 @@ public class GameFrame extends Game {
 	final int SCREEN_WIDTH = TILE_SIZE * MAX_SCREEN_ROW; // 48 * 16 = 768
 	final int SCREEN_HEIGHT = TILE_SIZE * MAX_SCREEN_COL; //48 * 12 = 576
 	
-	private GameMap gameMap = new GameMap(MAX_SCREEN_ROW, MAX_SCREEN_COL, 25);	
+	
+	public final int ROOM_GOAL= 25;
+	private GameMap gameMap = new GameMap(MAX_SCREEN_ROW, MAX_SCREEN_COL, ROOM_GOAL);	
 //	private Room currentRoom = ;
 	private double enemyMovementInterval; 
 	private double delta;
 	private long lastTime;
 	private long currentTime;
-	// decision count to show how many enemy movement decision periods have been made in a second for debugging/tuning
+	// decision count to show how many enemy movement decision periods have been made in a second for debugging/tuning - DEPRECATED CODE FOR OLD TANK AI
 	private int decisionCount;
 	private int timer;
-//	private double enemySpeedScale; // should be static variables in tank
-//	private double enemyBulletSpeedScale;
-//	private double enemyFireRateScale;
-//	private double enemyDamageScale;
-//	private int numEnemies;
-//	private double numEnemyScale;
 	public boolean gameOver = false;
 	public JLabel scoreLabel;
 	public JLabel healthLabel;	
 	public JLabel levelLabel;
 	public JLabel timeLabel; // treat as normal label
-	TimerLabel gameTime;
+	public TimerClock gameTime;
 	
-	int score;
+	private int score;
 	private int level;
-	int playerHealth;
-	private int playerHeal;
+	// store player health independently of object due to old code creating new players with each generation
+	private int playerStoredHealth = 250;
+	private int playerHeal = 30;
 	private double scoreMulti;
-	Player player;
-	InteractionHandler ih;
+	public Player player;
+	private InteractionHandler ih;
 	public PathFinder pFinder = new PathFinder(this);
 	private boolean firstTime;
 	
@@ -99,7 +93,6 @@ public class GameFrame extends Game {
 	ArrayList<Projectile> enemyProjList = new ArrayList<Projectile>();
 	ArrayList<Tank> enemyList = new ArrayList<Tank>();
 	ArrayList<Wall> wallList = new ArrayList<Wall>();
-	public ArrayList<Ray> rayList = new ArrayList<Ray>(); // CHANGE LATTER
 	// create wall array
 	private int enemyRaySteps = 4;
 	private int[][] wallArr;
@@ -112,7 +105,7 @@ public class GameFrame extends Game {
 		
 		// pre initialize player to prevent null pointers
 		player = new Player(0*TILE_SIZE+TILE_SIZE/2, 0*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
-		player.setHealth(playerHealth);
+		player.setHealth(playerStoredHealth);
 		add(player);
 		
 		
@@ -122,34 +115,26 @@ public class GameFrame extends Game {
 		lastTime = System.nanoTime();
 		decisionCount = 0;
 		timer = 0;
-//		enemySpeedScale = 1;
-//		enemyBulletSpeedScale = 1;
-//		enemyFireRateScale = 6;
-//		enemyDamageScale = 0.1;
-//		numEnemies = 1;
-//		numEnemyScale = 1;
+
 		gameOver = false;
 		setScore(0);
 		level = 0;
-		playerHealth = 250;
-		setPlayerHeal(15); // normal 15
 		setScoreMulti(1);
 		projList = new ArrayList<Projectile>();
 		enemyProjList = new ArrayList<Projectile>();
 		setEnemyList(new ArrayList<Tank>());
 		wallList = new ArrayList<Wall>();
-		rayList = new ArrayList<Ray>();
 		enemyRaySteps = 3; // try lowering
 		firstTime = true;
 		
 		// game GUI
 		scoreLabel = new JLabel("SCORE: 0");
 		scoreLabel.setForeground(Color.BLACK);
-//		scoreLabel.setBounds(50, 0, 400, 48);
+//		scoreLabel.setBounds(50, 0, 400, 48); // not drawing old score label as success is now calculated in number of seconds
 		scoreLabel.setFont(new Font("Sans-serif", Font.BOLD, 48));
 		add(scoreLabel);
 
-		healthLabel = new JLabel("HP: " + playerHealth);
+		healthLabel = new JLabel("HP: " + getStoredPlayerHealth());
 		healthLabel.setForeground(Color.BLACK);
 		healthLabel.setBounds(50, 910, 400, 48);
 		healthLabel.setFont(new Font("Sans-serif", Font.BOLD, 48));
@@ -161,13 +146,13 @@ public class GameFrame extends Game {
 		levelLabel.setFont(new Font("Sans-serif", Font.BOLD, 48));
 		add(levelLabel);
 		
-		timeLabel = new JLabel("RUN: 00:00");
+		timeLabel = new JLabel("TIME: 00:00");
 		timeLabel.setForeground(Color.BLACK);
 		timeLabel.setBounds(50, 0, 400, 48);
 		timeLabel.setFont(new Font("Sans-serif", Font.BOLD, 48));
 		add(timeLabel);
 		
-		gameTime = new TimerLabel();
+		gameTime = new TimerClock();
 
 				
 		this.addKeyListener(keyH);
@@ -182,7 +167,7 @@ public class GameFrame extends Game {
 		this.setFocusable(true);
 		this.setResizable(true);
 		System.out.println("game started");
-		
+		// timer is also broken
 	}
 
 	/** setup() method sets a delay for the act method */
@@ -193,15 +178,19 @@ public class GameFrame extends Game {
 		drawRoomBoard(getGameMap().getCurrentRoom());
 		ih = new InteractionHandler(this);
 		setDelay(16);
-		gameTime.reset();
 	} 
 
 	/** act() method contains core game logic and is called every game update */
 	@Override
 	public void act() {
-		
+		if(firstTime) {
+			gameTime.reset();
+			System.out.println("Tab closed");
+			firstTime = false;
+
+		}
 		if (gameTime.secondPassed()) {
-			timeLabel.setText("RUN: " + gameTime.getFormattedTime());			
+			timeLabel.setText("TIME: " + gameTime.getFormattedTime());			
 		}
 		// Player Movement
 		// check walls the player currently collides with
@@ -247,11 +236,11 @@ public class GameFrame extends Game {
 			getPlayer().setY(originalY);
 		}
 		
-		// Enemy Spawn Testing 
-		if (keyH.spacePressed) {
-			generateNewEnemies(1);
-		}
-		
+//		// Enemy Spawn Testing 
+//		if (keyH.spacePressed) {
+//			generateNewEnemies(1);
+//		}
+//		
 		
 		// Player Shooting
 		if (((mouseH.mousePressed)) && getPlayer().shotReady()) {
@@ -262,10 +251,6 @@ public class GameFrame extends Game {
 			getProjList().add(bullet);
 			add(bullet);
 			getPlayer().shootProjectile(angle);
-//			for (Tank enemy : enemyList) {
-//				enemy.setTarget(mouseH.mouseX/TILE_SIZE*TILE_SIZE, mouseH.mouseY/TILE_SIZE*TILE_SIZE);
-//			}
-			 /////////////////////////////////////////////////
 		}
 		
 		ih.handleEnemies();
@@ -280,7 +265,6 @@ public class GameFrame extends Game {
 			healthLabel.setText("HP: " + 0);
 			// stop game and display end dialog
 			this.stopGame();
-			this.checkHighScore(getScore());
 			this.gameOver();
 		}
 		
@@ -317,75 +301,96 @@ public class GameFrame extends Game {
 //	 * post: items of board array should appear on screen including wall and tank objects
 //	 */
 	public void drawRoomBoard(RoomPlan room) {
+		boolean endzone = false;
+		if (room.getRoomID() == ROOM_GOAL) {
+			gameWon();
+			endzone = true;
+		}
 		
 		// have a generate new map with the player's position in mind 
 		int[][] boardArr = room.getArray();
 		wallArr = room.getWallArray();
 
-		System.out.println("Stuff");
 		for (int row=0; row<=boardArr.length-1; row++){
 			for (int col=0; col<=boardArr[0].length-1; col++){
 				// wall=1
 				if (boardArr[row][col] == 1) {
-					Wall wall = new Wall(row*TILE_SIZE, col*TILE_SIZE, TILE_SIZE, TILE_SIZE);
-					wallList.add(wall);
-					add(wall);
+					if (endzone) {
+						Wall wall = new Wall(row*TILE_SIZE, col*TILE_SIZE, TILE_SIZE, TILE_SIZE, Color.GREEN);					
+						wallList.add(wall);
+						add(wall);
+					}
+					else  {
+						Wall wall = new Wall(row*TILE_SIZE, col*TILE_SIZE, TILE_SIZE, TILE_SIZE);
+						wallList.add(wall);
+						add(wall);
+					}
 				}
 				// player=2 
 				// Only for first time generations
 				if (boardArr[row][col] == 2 && firstTime) {
 					player.setX(row*TILE_SIZE);
 					player.setY(col*TILE_SIZE);
-					player.setHealth(playerHealth);
-					firstTime = false;
+					player.setHealth(getStoredPlayerHealth());
 				}
 				// enemy=3
-				if (boardArr[row][col] == 3) {
-					Tank enemy = new Tank(row*TILE_SIZE+TILE_SIZE/2, col*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
-					add(enemy);
-					enemyList.add(enemy);
-				}			
+				if (!endzone) {
+					if (boardArr[row][col] == 3) {
+						Tank enemy = new Tank(row*TILE_SIZE+TILE_SIZE/2, col*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this);
+						add(enemy);
+						enemyList.add(enemy);
+						
+					}								
+				}
+
 			}			
 		}
-		levelUp();
+		// display highscore prompt after drawing the room to create a backdrop.
+		if(endzone) {
+			this.checkHighScore(gameTime.getSeconds());
+		}
+		updateRoomNumber();
 	}
-
+	/** Method checks if the player qualifies to leave a room and moves the player to said room */
 	public void checkRoomChange() {
+		// IF PLAYER IS THE TOP OF THE SCREEN
 		if (getPlayer().getY() < TILE_SIZE/2) {
 			getGameMap().enterTopRoom();
 			clearEntities();
 			drawRoomBoard(getGameMap().getCurrentRoom()); // should be no args
 			setPlayer(new Player(MAX_SCREEN_ROW/2*TILE_SIZE+TILE_SIZE/2,MAX_SCREEN_COL*TILE_SIZE-TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this));
-			getPlayer().setHealth(playerHealth);
+			getPlayer().setHealth(getStoredPlayerHealth());
 			add(getPlayer());
 			// should also accommodate enemy spawns and how many to spawn
 		}
+		// IF PLAYER IS THE BOTTOM OF THE SCREEN
 		if (getPlayer().getY() > TILE_SIZE*MAX_SCREEN_COL-TILE_SIZE/2) {
-//			gameMap.getLeftRoom();
 			getGameMap().enterBottomRoom();
 			clearEntities();
 			drawRoomBoard(getGameMap().getCurrentRoom());
 			setPlayer(new Player( MAX_SCREEN_ROW/2*TILE_SIZE+TILE_SIZE/2, TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this));
 			
-			getPlayer().setHealth(playerHealth+getPlayerHeal());
+			getPlayer().setHealth(getStoredPlayerHealth());
 			add(getPlayer());
 			
 		}
+		// IF PLAYER IS THE LEFT OF THE SCREEN
 		if (getPlayer().getX() < TILE_SIZE/2) { // fix labels for rows and columns
 			getGameMap().enterLeftRoom();
 			clearEntities();
 			drawRoomBoard(getGameMap().getCurrentRoom());
 			setPlayer(new Player(MAX_SCREEN_ROW*TILE_SIZE-TILE_SIZE/2, MAX_SCREEN_COL/2*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this));
 			
-			getPlayer().setHealth(playerHealth+getPlayerHeal());
+			getPlayer().setHealth(getStoredPlayerHealth());
 			add(getPlayer());
 		}
+		// IF PLAYER IS THE RIGHT OF THE SCREEN
 		if (getPlayer().getX() > TILE_SIZE*MAX_SCREEN_COL-TILE_SIZE/2) {
 			getGameMap().enterRightRoom();
 			clearEntities();
 			drawRoomBoard(getGameMap().getCurrentRoom());
 			setPlayer(new Player(1*TILE_SIZE+TILE_SIZE/2, MAX_SCREEN_COL/2*TILE_SIZE+TILE_SIZE/2, TILE_SIZE, TILE_SIZE, this));
-			getPlayer().setHealth(playerHealth+getPlayerHeal());
+			getPlayer().setHealth(getStoredPlayerHealth());
 			add(getPlayer());
 		}
 	}
@@ -425,118 +430,27 @@ public class GameFrame extends Game {
 		wallList = new ArrayList<Wall>();
 		this.add(scoreLabel);
 		this.add(healthLabel);
-		getPlayer().setHealth(playerHealth);
+		getPlayer().setHealth(getStoredPlayerHealth());
 		this.add(levelLabel);
 		this.add(timeLabel);
 	}
 
-	/** 
-	 * Method draws a line of invisible ray objects and adds them to the ray list using an angle, distance, steps and a start point
-	 * pre: steps > 0, distance > 0
-	 * post: a line drawn with ray objects
-	 */
-	public void drawLine(double angle, int distance, int steps, int startX, int startY) {		
-		double stepDistance = distance/steps;
-
-		int endX = (int) (startX+((distance * (float) Math.sin(Math.toRadians(angle))) + .5));
-		int endY = (int) (startY+((distance * (float) Math.cos(Math.toRadians(angle))) + .5));
-
-		// i = 2 skips the rays at the origin
-		for (int i = 2; i<steps; i++) {
-			int rayX = (int) (startX+((stepDistance * i * (float) Math.sin(Math.toRadians(angle))) + .5));
-			int rayY = (int) (startY+((stepDistance * i * (float) Math.cos(Math.toRadians(angle))) + .5));
-
-			Ray fillerRay = new Ray(rayX, rayY, angle, i, this);
-			fillerRay.setVisible(false);
-			
-			rayList.add(fillerRay);
-			add(fillerRay);
-		}
-
-		Ray rayEnd = new Ray(endX, endY, angle, steps, this);
-		rayEnd.setVisible(true);
-		rayList.add(rayEnd);
-		add(rayEnd);
-
-//		for (Ray ray : rayList) {
-//			ray.setVisible(false);
-//		}		
-		repaint();
-	}
 	
-	/** 
-	 * Overloaded method draws a line of invisible ray objects and adds them to the ray list using steps and a start and end point
-	 * pre: steps > 0, distance > 0
-	 * post: a line drawn with ray objects
+	/**
+	 * Calculates the angle from a start point to an end point.
+	 * pre: The start and end coordinates must be valid integer values.
+	 * pre: Returns the angle in degrees from the start point to the end point. 
 	 */
-	// max length is there to differentiate the methods during calls
-	public void drawLine(int steps, int maxLength, int startX, int startY, int endX, int endY) {		
-		double angle = getAngleTo(startX, startY, endX, endY);
-		double distance =  Math.sqrt(Math.pow(endX-startX, 2)+ Math.pow(endY-startY, 2));
-		double stepDistance = distance/steps;
-
-		// i = 1 skips the ray at the origin
-		for (int i = 2; i<steps; i++) {
-			//			System.out.println("drawing radial rays...");
-			int rayX = (int) (startX+((stepDistance * i * (float) Math.sin(Math.toRadians(angle))) + .5));
-			int rayY = (int) (startY+((stepDistance * i * (float) Math.cos(Math.toRadians(angle))) + .5));
-
-			Ray fillerRay = new Ray(rayX, rayY, angle, i, this);
-			rayList.add(fillerRay);
-			add(fillerRay);
-		}
-
-		Ray rayEnd = new Ray(endX, endY, angle, steps, this);
-		rayList.add(rayEnd);
-		add(rayEnd);
-
-
-		for (Ray ray : rayList) {
-			ray.setVisible(false);
-		}
-		repaint();
-	}
-
-	/** 
-	 * Method returns the closest grid coords to an x,y coordinate using the game's tile size
-	 * pre: TILE_SIZE > 0
-	 * post: a 2 length 2d list including the x and y coordinate of the closest grid coordinate
-	 */
-	public int[] getClosestGridCoords(int x, int y) {
-		int gridX = x/TILE_SIZE;
-		int gridY = y/TILE_SIZE;
-		int[] gridCoord = {gridX, gridY};
-		return gridCoord;		
-	}
-	
-
 	public double getAngleTo(int startX, int startY, int endX, int endY) {
 		double angle = (Math.atan2(endX - startX, endY - startY) * 180) / Math.PI;
 		return angle;
 	}
 
-	public void levelUp() {
-//		level += 1;
-//		
-//		if (level >8) {
-//			enemySpeedScale *= 1.01;
-//			enemyBulletSpeedScale *= 1.10;	
-//		}
-//		
-//		scoreMulti *= 1.05;
-//		enemyFireRateScale *= 1.05;
-//		enemyDamageScale *= 1.15;
-//		numEnemyScale *= 1.30;
-//		numEnemies = (int) numEnemyScale;
-//		
-//		for (Tank enemy : enemyList) {
-//			enemy.speed *= enemySpeedScale;
-//			enemy.setShotDelay((int) (enemy.getShotDelay() / enemyFireRateScale));
-//			enemy.setProjectileSpeed((int) (enemy.getProjectileSpeed() * enemyBulletSpeedScale));
-//			enemy.setDamage((int) (enemy.getDamage() * enemyDamageScale));
-//		}
-		
-//		levelLabel.setText("LVL: " + Integer.toString(level));
+	/**
+	 * Updates the room number displayed on the levelLabel.
+	 * pre: levelLabel: Valid JLabel object, getGameMap(): Valid GameMap object, getCurrentRoom(): Valid Room object, getRoomID(): Valid room ID
+	 * post: levelLabel text is updated to "ROOM: room ID", The room number displayed on the levelLabel is updated to reflect the current room ID. */
+	public void updateRoomNumber() {
 		levelLabel.setText("ROOM: " + Integer.toString(getGameMap().getCurrentRoom().getRoomID()));
 	}
 
@@ -565,24 +479,24 @@ public class GameFrame extends Game {
 	}
 	
 	/** 
-	 * Method checks if the player's score is valid for a top 10 high score entry by comparing the 10th position's score in the high score list
+	 * Method checks if the player's score is valid for a top 10 high score entry by comparing the 10th position's score in the high score list taking in a timed score of min:hr
 	 * pre: none
 	 * post: nothing happens if the player's score is invalid for a high score. Displays input prompt for user's name if the user has a valid highscore and adds it to the highscore text file in form of username separated by a space and score
 	 */
-	public void checkHighScore(int score) {
+	public void checkHighScore(int seconds) {
 		// check if score is valid for a high score entry
 		int minPosition = 10;
 		ArrayList<String[]> scores = getHighScores();
-		int minScore;
+		int maxSeconds;
 		// if the high score list is less than 10, the user gets a free entry as long as their score is not zero
 		if (scores.size() <= 10) {			
-			minScore = 0;			
+			maxSeconds = 0;			
 		} else {
-			minScore = Integer.parseInt(scores.get(minPosition-1)[1]);
+			maxSeconds = Integer.parseInt(scores.get(minPosition-1)[1]);
 		}
 //		System.out.println("MINIMUM HIGH SCORE:" + minScore);
 		// if the score is greater than the minimum required score create a new high score entry
-		if (score > minScore) {
+		if (seconds > maxSeconds) {
 			// initialize user name string outside of try and catch
 			String username;
 			try {
@@ -593,14 +507,15 @@ public class GameFrame extends Game {
 				// if the user did not input a valid user name give the entry a default name of "noname"
 				username = "noname";
 			}				
-			String[] newEntry = {username, Integer.toString(score)};
+			String[] newEntry = {username, Integer.toString(seconds)};
 			scores.add(newEntry);
 			addHighScores(scores);
 		}
 	}
-
+	
+	
 	/** 
-	 * Method sorts the score list and adds the players score in accordingly, then adds the score list to the high score text file.
+	 * Method sorts the score list descending and adds the players score in accordingly, then adds the score list to the high score text file.
 	 * pre: a 2d scores list with names and respective scores separated
 	 * post: the high score text file is updated
 	 */
@@ -611,7 +526,7 @@ public class GameFrame extends Game {
 			public int compare(String[] entry1, String[] entry2) {
 				int value1 = Integer.parseInt(entry1[1]);
 				int value2 = Integer.parseInt(entry2[1]);
-				return value2-value1;
+				return value1-value2;
 			}
 		});
 		
@@ -668,13 +583,16 @@ public class GameFrame extends Game {
 	}
 
 	/** 
-	 * Method calls the game over dialogue.
+	 * Method calls the win dialogue.
 	 * pre: game stopped
-	 * post: game over dialogue displayed
+	 * post: win dialogue displayed
 	 */
 	public void gameWon() {
-		_WinDialog d = new _WinDialog(this, "You Escaped.");
+		gameTime.freeze();
+		String winText = "You reached room " + ROOM_GOAL + " in " + gameTime + "!";
+		_WinDialog d = new _WinDialog(this, winText);
 		d.setVisible(true);
+
 	}
 
 	
@@ -688,8 +606,10 @@ public class GameFrame extends Game {
 		_WinDialog(GameFrame owner, String title) {
 			super(owner, title);
 			Rectangle r = owner.getBounds();
-			setSize(200, 100);
-			setLocation(r.x + r.width / 2 - 100, r.y + r.height / 2 - 50);
+			int width = 600;
+			int height = 100;
+			setSize(width, height);
+			setLocation(r.x + r.width / 2 - width/2, r.y + 150 + r.height / 2 - height/2);
 			getContentPane().add(ok);
 			ok.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
@@ -761,4 +681,29 @@ public class GameFrame extends Game {
 	public void setPlayerHeal(int playerHeal) {
 		this.playerHeal = playerHeal;
 	}
+
+	public int getStoredPlayerHealth() {
+		return playerStoredHealth;
+		
+	}
+
+	public void setStoredPlayerHealth(int playerHealth) {
+		
+		playerStoredHealth = playerHealth;
+	}
 }
+
+
+//
+///** 
+// * Method returns the closest grid coords to an x,y coordinate using the game's tile size
+// * pre: TILE_SIZE > 0
+// * post: a 2 length 2d list including the x and y coordinate of the closest grid coordinate
+// */
+//public int[] getClosestGridCoords(int x, int y) {
+//	int gridX = x/TILE_SIZE;
+//	int gridY = y/TILE_SIZE;
+//	int[] gridCoord = {gridX, gridY};
+//	return gridCoord;		
+//} 
+

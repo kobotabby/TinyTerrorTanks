@@ -38,7 +38,7 @@ public class GameMap {
 	Map<Integer, int[]> roomNeighborDict = new HashMap<>();
 	private RoomPlan[] roomArr;
 	
-//	create a new list of room objects
+	/** Method creates a new list of room objects */
 	public GameMap(int rows, int cols, int rooms){
 		this.board = new int[ROOM_WIDTH][ROOM_HEIGHT];
 		System.out.println("BIG BOARD HAS STARTED");
@@ -50,10 +50,9 @@ public class GameMap {
 		populateRooms();
 	}
 	
+	/** Method generates the individual boards of each room and populates the larger room array. */
 	public void populateRooms() {
-		// use bfs to populate rooms
-		// check entrance and exits
-		
+		// check entrance and exits by checking neighbors of the room 
 		ArrayList<int[]> queue = new ArrayList<int[]>();
 		
 		int[][] visited = new int[rawFloorArr.length][rawFloorArr[0].length];
@@ -64,8 +63,8 @@ public class GameMap {
 
 			roomArr[id-1] = new RoomPlan(ROOM_WIDTH, ROOM_HEIGHT, id);
 			int[][] directions = {{0,1}, {0,-1}, {1,0}, {-1,0}};
-			// keep track of neighbors right, left, down, and up
-
+			// keep track of neighbors bottom, up, right, and left
+			// check for neighbors and make necessary entryways
 			int[] neighborArray = {0, 0, 0, 0};
 			for (int j=0; j<directions.length; j++) {
 				int row = currCoord[0]+directions[j][0];
@@ -80,7 +79,6 @@ public class GameMap {
 			roomNeighborDict.put(id, neighborArray);
 			showMatrix(roomArr[id-1].getArray());
 		}
-		printDict(roomNeighborDict);
 		
 		currentRoom = roomArr[0];
 	}
@@ -89,7 +87,7 @@ public class GameMap {
 		return currentRoom;
 	}
 
-	// the player also does not spawn in on restart
+	/** Update currently drawn room to match the direction the player went. If there is no room the player will loop back into the same room. */
 	public RoomPlan enterRightRoom() {
 //		printDict(roomNeighborDict);
 		int targetID = roomNeighborDict.get(currentRoom.getRoomID())[2];
@@ -104,7 +102,7 @@ public class GameMap {
 		return currentRoom;
 	}
 
-	
+	/** Update currently drawn room to match the direction the player went. If there is no room the player will loop back into the same room. */	
 	public RoomPlan enterLeftRoom() {
 //		printDict(roomNeighborDict);
 		int targetID = roomNeighborDict.get(currentRoom.getRoomID())[3];
@@ -119,6 +117,7 @@ public class GameMap {
 		return currentRoom;
 	}
 	
+	/** Update currently drawn room to match the direction the player went. If there is no room the player will loop back into the same room. */
 	public RoomPlan enterBottomRoom() {
 //		printDict(roomNeighborDict);
 		int targetID = roomNeighborDict.get(currentRoom.getRoomID())[0];
@@ -133,7 +132,7 @@ public class GameMap {
 		return currentRoom;
 	}
 
-	
+	/** Update currently drawn room to match the direction the player went. If there is no room the player will loop back into the same room. */
 	public RoomPlan enterTopRoom() {
 //		printDict(roomNeighborDict);
 		int targetID = roomNeighborDict.get(currentRoom.getRoomID())[1];
@@ -151,7 +150,7 @@ public class GameMap {
 
 	
 
-	
+	/** Method handles the different directions to create entrances. */
 	public void createEntrance(int roomID, int direction) {
 		switch(direction) {
 		case 0: 
@@ -164,7 +163,8 @@ public class GameMap {
 			roomArr[roomID-1].createTopEntrance(); break;
 		}
 	}
-	
+
+	/** Method finds the rol and col of a room in the greater floor array and returns the coord. */
 	public int[] findRoomPosition(int roomID) {
 		for (int row=0; row<rawFloorArr.length; row++) {
 			for (int col=0; col<rawFloorArr[0].length; col++) {
@@ -196,20 +196,6 @@ public class GameMap {
 			}
 			System.out.println("]");
 		}
-	}
-	
-	private void printDict(Map<Integer, int[]> dictionary) {
-        System.out.println("\nDictionary Entries:");
-        for (Map.Entry<Integer, int[]> entry : dictionary.entrySet()) {
-            int key = entry.getKey();
-            int[] arrayValues = entry.getValue();
-
-            System.out.print("Key " + key + ": ");
-            for (int value : arrayValues) {
-                System.out.print(value + " ");
-            }
-            System.out.println();
-        }
 	}
 	
 }

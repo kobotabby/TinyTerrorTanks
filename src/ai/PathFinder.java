@@ -6,9 +6,14 @@ import javax.swing.text.html.parser.Entity;
 
 import main.GameFrame;
 
-
+/**
+ * @author Ethan Gan
+ * Computer Science
+ * 1/12/2024
+ * Implementation of the A* pathfinding algorithm based on RyiSnow's tutorial. Works by calculating the costs of various nodes to determine which paths have costs that are the closest to both the starting and ending position.
+ */
 public class PathFinder {
-	GameFrame gp;
+	GameFrame game;
 	Node[][] node;
 	ArrayList<Node> openList = new ArrayList<>();
 	public ArrayList<Node> pathList = new ArrayList<>();
@@ -19,38 +24,40 @@ public class PathFinder {
 	private int maxRow;
 	
 	public PathFinder(GameFrame gp) {
-		this.gp = gp;
+		this.game = gp;
 		maxCol = gp.MAX_SCREEN_COL;
 		maxRow = gp.MAX_SCREEN_ROW;
 		instantiateNodes();
 	}
 	
+	/** Method creates nodes based on the Room plan of the GameFrame */
 	public void instantiateNodes() {
-		node = new Node[gp.MAX_SCREEN_ROW][gp.MAX_SCREEN_COL];
+		node = new Node[game.MAX_SCREEN_ROW][game.MAX_SCREEN_COL];
 		
 		int col = 0;
 		int row = 0;
 		
-		while(col < gp.MAX_SCREEN_COL && row < gp.MAX_SCREEN_ROW) {
+		while(col < game.MAX_SCREEN_COL && row < game.MAX_SCREEN_ROW) {
 			node[col][row] = new Node(col, row);
 			col++;
-			if ( col == gp.MAX_SCREEN_COL) {
+			if (col == game.MAX_SCREEN_COL) {
 				col = 0;
 				row++;
 			}
 		}
 	}
+	/** Method resets node list and path list */
 	public void resetNodes() {
 		int col = 0;
 		int row = 0;
-		while(col < gp.MAX_SCREEN_COL && row< gp.MAX_SCREEN_ROW) {
+		while(col < game.MAX_SCREEN_COL && row< game.MAX_SCREEN_ROW) {
 			// Reset open, checked and solid state
 			node[col][row].open = false;
 			node[col][row].checked = false;
 			node[col][row].solid = false;
 			
 			col++;
-			if (col == gp.MAX_SCREEN_COL) {
+			if (col == game.MAX_SCREEN_COL) {
 				col = 0;
 				row++;
 			}
@@ -61,6 +68,7 @@ public class PathFinder {
 		step = 0;
 		
 	}
+	/** Method sets nodes to a list and flags unreachable nodes as solid such as walls. */
 	public void setNodes(int startCol, int startRow, int goalCol, int goalRow) {
 		resetNodes();
 		
@@ -73,22 +81,23 @@ public class PathFinder {
 		int col = 0;
 		int row = 0;
 		
-		while(col<gp.MAX_SCREEN_COL && row<gp.MAX_SCREEN_ROW) {
+		while(col<game.MAX_SCREEN_COL && row<game.MAX_SCREEN_ROW) {
 //			System.out.println("THINKING HARDERerer ");
-			int tileNum = gp.getGameMap().getCurrentRoom().getArray()[col][row];
+			int tileNum = game.getGameMap().getCurrentRoom().getArray()[col][row];
 			if (tileNum == 1) { // if it is a wall
 				node[col][row].solid = true;
 			}
 			getCost(node[col][row]);
 			
 			col++;
-			if(col == gp.MAX_SCREEN_COL) {
+			if(col == game.MAX_SCREEN_COL) {
 				col = 0;
 				row++;
 			}
 		}
 
 	}
+	/** Method initializes node costs. */
 	private void getCost(Node node) {
 		// GET G COST (The distance from the start node)
 		int xDistance = Math.abs(node.col - startNode.col);
@@ -103,9 +112,8 @@ public class PathFinder {
 		// GET F COST (The total cost)
 		node.fCost = node.gCost + node.hCost;
 	}
-	
+	/** Method implements A* algorithm by comparing the fCosts and later gCosts of the nodes to find the best Nodes to go to. */
 	public boolean search() {
-//		System.out.println("THINKING HARD");
 		int step = 0;
 		while (goalReached == false && step < 300) {
 			step++;
@@ -116,7 +124,6 @@ public class PathFinder {
 			openList.remove(currentNode);
 			
 			// OPEN THE UP NODE
-			
 			if (row -1 >= 0) {
 				openNode(node[col][row-1]);				
 			}
@@ -130,8 +137,7 @@ public class PathFinder {
 				openNode(node[col+1][row]);			
 			}
 
-			// FIND THE BEST NODE
-			
+			// FIND THE BEST NODE using fCost first
 			int bestNodeIndex = 0;
 			int bestNodefCost = 999;
 			
@@ -169,23 +175,18 @@ public class PathFinder {
 		return goalReached;
 	}
 	
-	// original
+	/** Method creates a new coordinate path based on the nodes of trackPath. */
 	public ArrayList<int[]> createCoordinatePath(int startCol, int startRow, int goalCol, int goalRow) {
 		this.setNodes(startCol, startRow, goalCol, goalRow);
 		boolean goalReached = this.search();
 		if (goalReached) {
 		    ArrayList<Node> pathList = this.trackPath();
 		    ArrayList<int[]> coordList = this.convertPathToCoordinates(pathList);
-		    for (int[] coord : coordList) {
-		        int col = coord[0];
-		        int row = coord[1];
-//		        System.out.println("Node position: (" + col + ", " + row + ")");
-		    }
 		    return coordList;
 		}
 		return new ArrayList<int[]>();
 	}
-	// original
+	/** Method converts node list into a list of coordinates. */
 	public ArrayList<int[]> convertPathToCoordinates(ArrayList<Node> pathList) {
 	    ArrayList<int[]> coordList = new ArrayList<>();
 	    for (Node node : pathList) {
@@ -194,7 +195,7 @@ public class PathFinder {
 	    }
 	    return coordList;
 	}
-	
+	/** Method opens nodes for decision to evaluate for node cost. */
 	private void openNode(Node node) {
 		if(node.open == false && node.checked == false && node.solid == false) {
 			node.setAsOpen();
@@ -203,6 +204,7 @@ public class PathFinder {
 			
 		}
 	}
+	/** Method backtracks from current node its optimal path and returns an array of nodes. */
     public ArrayList<Node> trackPath()
     {
     	// clear path list

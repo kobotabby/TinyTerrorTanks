@@ -1,9 +1,4 @@
-/**
- * @author Ethan Gan
- * Computer Science
- * 1/23/2023
- * Player class extends Tank class and is the tank the player controls in the TankRunner game.
- */
+
 package entity;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -14,10 +9,14 @@ import java.awt.Rectangle;
 import handlers.KeyHandler;
 import handlers.MouseHandler;
 import main.GameFrame;
-
+/**
+ * @author Ethan Gan
+ * Computer Science
+ * 1/23/2023 - OLD CODE
+ * Player class extends Tank class and is the tank the player controls in the TankRunner game.
+ */
 public class Player extends Tank  {	
 	public int speed = 8; // speed normally 4
-	// maybe implement collision map???? - not priority
 	private int health; 
 	private int damage = 1000; // being ignored lol
 	private int centerX; 

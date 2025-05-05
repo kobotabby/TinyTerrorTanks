@@ -2,6 +2,7 @@
  * @author Ethan Gan
  * Computer Science
  * 1/23/2023
+ * UPDATED 1/22/2024: Added new descriptions.
  * Main class controls running the TankRunner GameFrame and main menu GUI.
  */
 package main;
@@ -16,7 +17,6 @@ import java.util.TimerTask;
 
 import javax.swing.JOptionPane;
 import javax.swing.Timer;
-// can convert to node based grid 
 /* 
 	SOURCES------------------------------
 	MOUSE LISTENER AND KEY LISTENER SETUP:
@@ -39,6 +39,12 @@ import javax.swing.Timer;
 	- https://www.geeksforgeeks.org/collections-sort-java-examples/
 	READING TEXTFILES:
 	- https://stackoverflow.com/questions/19871955/java-io-filenotfoundexception-the-system-cannot-find-the-file-specified
+	
+	NEW SOURCES------------------------------
+	PATHFINDING: A* ALGORITHM
+	- https://youtu.be/Hd0D68guFKg?si=cCFebip2Y3euqmKY
+	PATHFINDING IMPLEMENTATION
+	- https://www.youtube.com/watch?v=Hd0D68guFKg&feature=youtu.be 
 */
 
 /** Main class manages the active JFrame and main menu GUI */
@@ -74,9 +80,8 @@ public class Main {
 					frame.dispose();						
 
 					System.out.println("REBOOTING...");
-						
+
 					createNewGameFrame();
-	
 			}
 		});
 		timer.start();	
@@ -96,7 +101,6 @@ public class Main {
 	}
 	public static void displayMainMenu() {
 		// main menu GUI options
-
 		Object[] options = {"Play", "Controls", "Highscores", "Quit"};
 				// loop the main menu screen when the player has not yet started to play the game or exit
 				boolean choiceOpen = true;
@@ -104,19 +108,12 @@ public class Main {
 					System.out.println("RUNNING");
 					choiceOpen = false;
 					// Code for main menu GUI
-//					int choice = JOptionPane.showOptionDialog(frame,
-//							"Blast through levels of tanks as they get more numbered, dangerous and quick!",
-//							"Welcome to the TankRunner Menu!",
-//							JOptionPane.DEFAULT_OPTION,
-//							JOptionPane.QUESTION_MESSAGE,
-//							null,
-//							options,
-//							options[2]);
 					int choice = JOptionPane.showOptionDialog(frame,
-							"Currently a demo of a new floor generation with interconnected rooms, press SPACE to spawn in enemies.",
-							//  bugs: cannot reenter game from menu after death and game does not always run when started. 
-							
-							"Welcome to the TankRunner 2 Milestone Menu!",
+							"<html> Speedrun ROOM 25. Clear 25 respawning rooms of increasing numbers of enemies!<br><br>"
+							+ "A path can be followed in consecutive room numbers, but it can also be shortcutted! <br><br>"
+							+ "</html>"
+							+ " ",
+							"Welcome to the TANKRUNNER II: THE 25 CHAMBERS Menu!",
 							JOptionPane.DEFAULT_OPTION,
 							JOptionPane.QUESTION_MESSAGE,
 							null,
@@ -131,7 +128,7 @@ public class Main {
 						break;
 					case 1:
 						// Code to display controls
-						JOptionPane.showMessageDialog(frame, "<HTML>Shoot Tanks! Use WASD keys to move and SPACE or MOUSE1 to shoot-em up! <br> You can use smart angles to outrange your enemies with bouncing bullets. <br> Get as much score as possible, but don't die!<!HTML>", "TankRunner Menu - Controls", JOptionPane.INFORMATION_MESSAGE);
+						JOptionPane.showMessageDialog(frame, "<HTML>Shoot Tanks for 30 Health! Use WASD keys to move and SPACE or MOUSE1 to shoot-em up! <br> You can use smart angles to outrange your enemies with bouncing bullets. <br> Remember you are evaluated on time to get to room 25 not on enemies killed, try to be sneaky!<!HTML>", "TankRunner Menu - Controls", JOptionPane.INFORMATION_MESSAGE);
 						choiceOpen = true;
 						break;
 					case 2:
@@ -147,7 +144,7 @@ public class Main {
 							highScores = new String[scores.size()];
 							for (int i=0; i<scores.size(); i++) {
 								String[] entry = scores.get(i);
-								String entryLabel = (i+1) + ". " + entry[0] + " - " + entry[1] + " points"; 
+								String entryLabel = (i+1) + ". " + entry[0] + " - " + entry[1] + " seconds"; 
 								highScores[i] = entryLabel;
 							}			
 						}
@@ -156,7 +153,7 @@ public class Main {
 							highScores = new String[10];
 							for (int i=0; i<10; i++) {
 								String[] entry = scores.get(i);
-								String entryLabel = (i+1) + ". " + entry[0] + " - " + entry[1] + " points"; 
+								String entryLabel = (i+1) + ". " + entry[0] + " - " + entry[1] + " seconds"; 
 								highScores[i] = entryLabel;
 							}
 						}

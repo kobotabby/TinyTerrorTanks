@@ -229,6 +229,8 @@ public class RoomPlan {
 		}
 		return templateBoard;
 	}
+	
+	/** Method creates an opening entrance in the specified direction with 4 lines of buffered space for no wall nor entity spawn. */
 	public void createLeftEntrance(){
 		for (int row=8; row<=templateBoard.length-1-8; row++){
 			templateBoard[row][0] = ENTRANCE_SQUARE;
@@ -237,6 +239,7 @@ public class RoomPlan {
 			}
 		}
 	}
+	/** Method creates an opening entrance in the specified direction with 4 lines of buffered space for no wall nor entity spawn. */
 	public void createRightEntrance(){
 		for (int row=8; row<=templateBoard.length-1-8; row++){
 			templateBoard[row][templateBoard[0].length-1] = ENTRANCE_SQUARE;
@@ -244,8 +247,8 @@ public class RoomPlan {
 				templateBoard[row][templateBoard[0].length-1-i] = PROTECTED_SQUARE;
 			}
 		}
-
 	}	
+	/** Method creates an opening entrance in the specified direction with 4 lines of buffered space for no wall nor entity spawn. */
 	public void createTopEntrance(){
 		for (int col=8; col<=templateBoard[0].length-1-8; col++){
 			templateBoard[0][col] = ENTRANCE_SQUARE;
@@ -254,6 +257,7 @@ public class RoomPlan {
 			}
 		}
 	}
+	/** Method creates an opening entrance in the specified direction with 4 lines of buffered space for no wall nor entity spawn. */
 	public void createBottomEntrance(){
 		for (int col=8; col<=templateBoard[0].length-1-8; col++){
 			templateBoard[templateBoard.length-1][col] = ENTRANCE_SQUARE;
@@ -262,10 +266,13 @@ public class RoomPlan {
 			}
 		}
 	}
+	
+	/** gets board of room */
 	public int[][] getArray(){
 		return templateBoard;
 	}
-
+	
+	//getters and setters
 	public int getRoomID() {
 		return roomID;
 	}

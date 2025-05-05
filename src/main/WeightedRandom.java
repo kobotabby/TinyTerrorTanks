@@ -1,7 +1,7 @@
 /**
  * @author Philipp from gamedev.stackexchange.com + some modification from Ethan Gan
  * Computer Science
- * 1/23/2023
+ * 1/23/2023: UNUSED IN NEW VERSION
  * WeightedRandom class manages selecting random options with weights
  */
 package main;

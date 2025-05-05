@@ -5,6 +5,12 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 
+/**
+ * @author Ethan Gan
+ * Computer Science
+ * 1/12/2024
+ * Node class for the A* pathfinding algorithm that checks the cost of different nodes to determine which to visit.
+ */
 public class Node extends JButton implements ActionListener {
 	Node parent;
 	public int col;
@@ -26,39 +32,24 @@ public class Node extends JButton implements ActionListener {
 		setForeground(Color.black);
 		addActionListener(this);
 	}
-	
+	// straight forward functions to enable and disable flags 
 	public void setAsStart() {
-		setBackground(Color.blue);
-		setForeground(Color.white);
-		setText("Start");
 		start = true;
 	}
 	
 	public void setAsGoal() {
-		setBackground(Color.yellow);
-		setForeground(Color.black);
-		setText("Goal");
 		goal = true;
 	}
 	public void setAsSolid() {
-		setBackground(Color.black);
-		setForeground(Color.black);
 		solid = true;
 	}
 	public void setAsOpen() {
 		open = true;
 	}
 	public void setAsChecked() {
-		if (start == false && goal == false) {
-			setBackground(Color.orange);
-			setForeground(Color.black);
-		}
 		checked = true; 
 	}
-	public void setAsPath() {
-		setBackground(Color.green);
-		setForeground(Color.black);
-	}
+
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
