@@ -15,6 +15,7 @@ Explore a randomly generated map of 25 rooms counting up from room one filled wi
 - Left Mouse to shoot bullets
 
 <h2>To run project:</h2> 
+
 - Make sure Java is installed on the local computer (Project was done in Java 8)
 - Unzip project file
 - Run Tankrunner2.jar 
