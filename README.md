@@ -1,12 +1,12 @@
-TankRunners 
+<h1>TankRunners II: The 25 Chambers </h1>
 
-2D top-down dungeon shooter. [Project for ICS4U]
+2D top-down procedural dungeon shooter. [Project for ICS4U]
 
-Objective:
+<h2>Objective:</h2>
 
-Explore a randomly generated map of 30 rooms filled with progressively harder and more numerous enemies. Try to reach room 30 to win. 
+Explore a randomly generated map of 25 rooms counting up from room one filled with harder and more numerous enemies. Try to reach room 25 to win. 
 
-Controls: 
+<h2>Controls: </h2>
 
 - W to move up 
 - S to move down
@@ -14,4 +14,7 @@ Controls:
 - D to move right
 - Left Mouse to shoot bullets
 
-To run project: 
+<h2>To run project:</h2> 
+- Make sure Java is installed on the local computer (Project was done in Java 8)
+- Unzip project file
+- Run Tankrunner2.jar 
